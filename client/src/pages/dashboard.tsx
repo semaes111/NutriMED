@@ -112,7 +112,9 @@ export default function Dashboard() {
 
   const { data: weightHistory } = useQuery({
     queryKey: ["/api/patient/weight-history"],
-    enabled: !!patient,
+    enabled: !!patient || !!patientSession,
+    staleTime: 0, // Always fetch fresh data
+    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
   });
 
   const logoutMutation = useMutation({
@@ -346,20 +348,40 @@ export default function Dashboard() {
               </div>
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={weightHistory.map((record: any) => ({
-                    date: new Date(record.recordedDate).toLocaleDateString('es-ES'),
-                    weight: parseFloat(record.weight),
-                  }))}>
+                  <LineChart data={weightHistory
+                    .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+                    .map((record: any, index: number) => ({
+                      date: `${new Date(record.createdAt).toLocaleDateString('es-ES', { 
+                        day: '2-digit', 
+                        month: '2-digit' 
+                      })} (${new Date(record.createdAt).toLocaleTimeString('es-ES', { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })})`,
+                      weight: parseFloat(record.weight),
+                      fullDate: record.createdAt,
+                      index: index + 1
+                    }))}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="date" />
+                    <XAxis 
+                      dataKey="date" 
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                      fontSize={12}
+                    />
                     <YAxis domain={['dataMin - 2', 'dataMax + 2']} />
-                    <Tooltip />
+                    <Tooltip 
+                      formatter={(value: any, name: any) => [`${value} kg`, 'Peso']}
+                      labelFormatter={(label: any) => `Registro: ${label}`}
+                    />
                     <Line 
                       type="monotone" 
                       dataKey="weight" 
                       stroke="#10b981" 
                       strokeWidth={3}
-                      dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                      dot={{ fill: '#10b981', strokeWidth: 2, r: 6 }}
+                      activeDot={{ r: 8, stroke: '#10b981', strokeWidth: 2 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
