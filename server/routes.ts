@@ -368,18 +368,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const patientId = parseInt(req.params.patientId);
-      const weightData = insertWeightRecordSchema.parse({
-        ...req.body,
+      const { weight, notes } = req.body;
+      
+      console.log("Weight registration request:", { patientId, weight, notes });
+      
+      if (!weight || isNaN(parseFloat(weight)) || parseFloat(weight) < 30 || parseFloat(weight) > 300) {
+        console.log("Invalid weight:", weight);
+        return res.status(400).json({ message: "Peso inválido. Debe estar entre 30 y 300 kg." });
+      }
+
+      const weightRecord = await storage.addWeightRecord({
         patientId,
+        weight: parseFloat(weight).toFixed(2),
+        notes: notes || null,
+        recordedDate: new Date()
       });
 
-      const weightRecord = await storage.addWeightRecord(weightData);
-      
+      console.log("Weight record created:", weightRecord);
       res.json(weightRecord);
     } catch (error) {
-      res.status(400).json({ 
-        message: "Error al agregar registro de peso: " + (error as Error).message 
-      });
+      console.error("Error adding weight record:", error);
+      res.status(500).json({ message: "Error al añadir registro de peso: " + error.message });
     }
   });
 
