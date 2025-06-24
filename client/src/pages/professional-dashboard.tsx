@@ -279,7 +279,7 @@ export default function ProfessionalDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs defaultValue="patients" className="space-y-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="patients" className="flex items-center gap-2">
               <Users size={16} />
@@ -506,8 +506,10 @@ export default function ProfessionalDashboard() {
                           <Button
                             size="sm"
                             onClick={() => {
+                              console.log("Button clicked, patient:", patient);
                               setSelectedPatient(patient);
                               setActiveTab("analytics");
+                              console.log("Active tab set to analytics");
                             }}
                             className="bg-medical-green text-white hover:bg-green-700"
                           >
