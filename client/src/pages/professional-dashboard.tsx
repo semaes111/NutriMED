@@ -323,7 +323,9 @@ export default function ProfessionalDashboard() {
             <Button
               onClick={() => window.location.href = "/api/logout"}
               variant="outline"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50"
             >
+              <LogOut size={16} className="mr-2" />
               Cerrar Sesión
             </Button>
           </div>

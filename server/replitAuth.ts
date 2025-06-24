@@ -117,14 +117,8 @@ export async function setupAuth(app: Express) {
 
   app.get("/api/logout", (req, res) => {
     req.logout(() => {
-      // Check if there's a return URL stored (for professionals returning to patient panel)
-      const returnUrl = req.query.returnUrl as string;
-      if (returnUrl) {
-        res.redirect(returnUrl);
-      } else {
-        // Default redirect to professional access panel
-        res.redirect("/professional-access");
-      }
+      // Always redirect to Replit home page after logout
+      res.redirect("/");
     });
   });
 }
