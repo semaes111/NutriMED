@@ -110,9 +110,23 @@ export default function Dashboard() {
     enabled: !patientSession, // Only query if no patient session
   });
 
+  // Get current patient data - either from API or from session
+  const currentPatient = patientSession?.patient || patient?.patient;
+
   const { data: weightHistory } = useQuery({
-    queryKey: ["/api/patient/weight-history"],
-    enabled: !!patient || !!patientSession,
+    queryKey: ["/api/patient/weight-history", currentPatient?.id],
+    queryFn: async () => {
+      if (currentPatient?.id) {
+        console.log("Fetching weight history for patient:", currentPatient.id);
+        const response = await fetch(`/api/patient/weight-history/${currentPatient.id}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+      }
+      return [];
+    },
+    enabled: !!currentPatient,
     staleTime: 0, // Always fetch fresh data
     refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
   });
@@ -168,9 +182,6 @@ export default function Dashboard() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
-
-  // Get current patient data - either from API or from session
-  const currentPatient = patientSession?.patient || patient?.patient;
   
   if (isLoading && !patientSession) {
     return (

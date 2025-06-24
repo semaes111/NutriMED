@@ -434,18 +434,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get patient weight history (for patient dashboard)
-  app.get("/api/patient/weight-history", isAuthenticated, async (req: any, res) => {
+  app.get("/api/patient/weight-history/:patientId?", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
-      const patient = await storage.getPatientByUserId(userId);
+      const requestedPatientId = req.params.patientId;
+      
+      let patient;
+      
+      if (requestedPatientId) {
+        // If patient ID is provided, get that specific patient
+        patient = await storage.getPatientById(parseInt(requestedPatientId));
+      } else {
+        // Otherwise, get patient by user ID (authenticated user)
+        patient = await storage.getPatientByUserId(userId);
+      }
       
       if (!patient) {
         return res.status(404).json({ message: "Paciente no encontrado" });
       }
 
+      console.log("Fetching weight history for patient ID:", patient.id);
       const weightHistory = await storage.getWeightRecordsByPatient(patient.id);
-      res.json(weightHistory);
+      console.log("Weight history found:", weightHistory.length, "records");
+      
+      // Sort by creation date to maintain chronological order
+      const sortedHistory = weightHistory.sort((a, b) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      
+      res.json(sortedHistory);
     } catch (error) {
+      console.error("Error fetching patient weight history:", error);
       res.status(500).json({ message: "Error interno del servidor" });
     }
   });
