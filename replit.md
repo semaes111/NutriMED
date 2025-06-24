@@ -40,10 +40,12 @@ The application follows a monorepo structure with a React frontend, Express.js b
 ## Key Components
 
 ### Authentication System
-- **Access Code Validation**: Time-limited codes (7 days) for patient access
+- **Replit Auth Integration**: Secure OpenID Connect authentication via Replit
+- **Access Code Validation**: Time-limited codes (30 days) for patient access
 - **Session Management**: Server-side sessions stored in PostgreSQL
+- **User Linking**: Authenticated users can link their patient access codes
 - **Automatic Expiration**: Codes expire based on timestamp validation
-- **Security**: No permanent user registration, temporary access only
+- **Security**: OAuth2/OpenID Connect with refresh token support
 
 ### Diet Management
 - **Multi-Level System**: 5 diet levels with increasing restrictions
@@ -138,6 +140,7 @@ The application follows a monorepo structure with a React frontend, Express.js b
 ## Changelog
 
 - June 24, 2025. Initial setup
+- June 24, 2025. Added Replit Auth integration for secure user authentication
 
 ## User Preferences
 

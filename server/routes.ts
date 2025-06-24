@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertPatientSchema } from "@shared/schema";
 import { z } from "zod";
 
@@ -9,45 +10,27 @@ const accessCodeSchema = z.object({
 });
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Validate access code
-  app.post("/api/auth/validate", async (req, res) => {
-    try {
-      const { accessCode } = accessCodeSchema.parse(req.body);
-      
-      const patient = await storage.getPatientByAccessCode(accessCode);
-      
-      if (!patient) {
-        return res.status(401).json({ 
-          message: "Código de acceso inválido o expirado" 
-        });
-      }
+  // Auth middleware
+  await setupAuth(app);
 
-      // Set session
-      req.session.patientId = patient.id;
-      
-      res.json({
-        patient: {
-          id: patient.id,
-          name: patient.name,
-          dietLevel: patient.dietLevel,
-          codeExpiry: patient.codeExpiry,
-        }
-      });
+  // Auth routes
+  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const user = await storage.getUser(userId);
+      res.json(user);
     } catch (error) {
-      res.status(400).json({ 
-        message: "Datos de entrada inválidos" 
-      });
+      console.error("Error fetching user:", error);
+      res.status(500).json({ message: "Failed to fetch user" });
     }
   });
 
-  // Get current patient
-  app.get("/api/patient/current", async (req, res) => {
-    if (!req.session.patientId) {
-      return res.status(401).json({ message: "No autorizado" });
-    }
-
+  // Get current patient (for authenticated users)
+  app.get("/api/patient/current", isAuthenticated, async (req: any, res) => {
     try {
-      const patient = await storage.getPatientByAccessCode("");
+      const userId = req.user?.claims?.sub;
+      const patient = await storage.getPatientByUserId(userId);
+      
       if (!patient) {
         return res.status(404).json({ message: "Paciente no encontrado" });
       }
@@ -65,12 +48,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get diet levels
-  app.get("/api/diet-levels", async (req, res) => {
-    if (!req.session.patientId) {
-      return res.status(401).json({ message: "No autorizado" });
-    }
+  // Validate access code and link to user
+  app.post("/api/auth/validate-access-code", isAuthenticated, async (req: any, res) => {
+    try {
+      const { accessCode } = accessCodeSchema.parse(req.body);
+      const userId = req.user?.claims?.sub;
+      
+      const patient = await storage.getPatientByAccessCode(accessCode);
+      
+      if (!patient) {
+        return res.status(401).json({ 
+          message: "Código de acceso inválido o expirado" 
+        });
+      }
 
+      // Link patient to user if not already linked
+      if (!patient.userId) {
+        await storage.updatePatientUserId(patient.id, userId);
+      }
+      
+      res.json({
+        patient: {
+          id: patient.id,
+          name: patient.name,
+          dietLevel: patient.dietLevel,
+          codeExpiry: patient.codeExpiry,
+        }
+      });
+    } catch (error) {
+      res.status(400).json({ 
+        message: "Datos de entrada inválidos" 
+      });
+    }
+  });
+
+  // Get diet levels - authenticated users only
+  app.get("/api/diet-levels", isAuthenticated, async (req, res) => {
     try {
       const dietLevels = await storage.getDietLevels();
       res.json(dietLevels);
@@ -79,12 +92,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get meal plans by diet level
-  app.get("/api/meal-plans/:dietLevelId", async (req, res) => {
-    if (!req.session.patientId) {
-      return res.status(401).json({ message: "No autorizado" });
-    }
-
+  // Get meal plans by diet level - authenticated users only
+  app.get("/api/meal-plans/:dietLevelId", isAuthenticated, async (req, res) => {
     try {
       const dietLevelId = parseInt(req.params.dietLevelId);
       const mealPlans = await storage.getMealPlansByDietLevel(dietLevelId);
@@ -94,12 +103,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get recipes by meal plan
-  app.get("/api/recipes/:mealPlanId", async (req, res) => {
-    if (!req.session.patientId) {
-      return res.status(401).json({ message: "No autorizado" });
-    }
-
+  // Get recipes by meal plan - authenticated users only
+  app.get("/api/recipes/:mealPlanId", isAuthenticated, async (req, res) => {
     try {
       const mealPlanId = parseInt(req.params.mealPlanId);
       const recipes = await storage.getRecipesByMealPlan(mealPlanId);
@@ -109,12 +114,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get food items by category
-  app.get("/api/food-items/:category", async (req, res) => {
-    if (!req.session.patientId) {
-      return res.status(401).json({ message: "No autorizado" });
-    }
-
+  // Get food items by category - authenticated users only
+  app.get("/api/food-items/:category", isAuthenticated, async (req, res) => {
     try {
       const category = req.params.category;
       const foodItems = await storage.getFoodItemsByCategory(category);
@@ -124,28 +125,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get intermittent fasting program
-  app.get("/api/intermittent-fasting", async (req, res) => {
-    if (!req.session.patientId) {
-      return res.status(401).json({ message: "No autorizado" });
-    }
-
+  // Get intermittent fasting program - authenticated users only
+  app.get("/api/intermittent-fasting", isAuthenticated, async (req: any, res) => {
     try {
-      const fasting = await storage.getIntermittentFastingByPatient(req.session.patientId);
+      const userId = req.user?.claims?.sub;
+      const patient = await storage.getPatientByUserId(userId);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Paciente no encontrado" });
+      }
+
+      const fasting = await storage.getIntermittentFastingByPatient(patient.id);
       res.json(fasting || null);
     } catch (error) {
       res.status(500).json({ message: "Error interno del servidor" });
     }
-  });
-
-  // Logout
-  app.post("/api/auth/logout", (req, res) => {
-    req.session.destroy((err) => {
-      if (err) {
-        return res.status(500).json({ message: "Error al cerrar sesión" });
-      }
-      res.json({ message: "Sesión cerrada exitosamente" });
-    });
   });
 
   const httpServer = createServer(app);

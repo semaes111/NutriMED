@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { PatientInfo } from "@/lib/types";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import { 
   Utensils, 
   Sun, 
@@ -37,22 +38,28 @@ export default function Dashboard() {
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
-      await apiRequest("POST", "/api/auth/logout", {});
+      window.location.href = "/api/logout";
     },
     onSuccess: () => {
       toast({
         title: "Sesión cerrada",
         description: "Ha cerrado sesión exitosamente",
       });
-      setLocation("/");
     },
   });
 
   useEffect(() => {
-    if (error) {
-      setLocation("/");
+    if (error && isUnauthorizedError(error as Error)) {
+      toast({
+        title: "Sesión expirada",
+        description: "Por favor inicia sesión nuevamente",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 1000);
     }
-  }, [error, setLocation]);
+  }, [error, toast]);
 
   const handleLogout = () => {
     if (confirm("¿Está seguro de que desea cerrar sesión?")) {
@@ -88,7 +95,26 @@ export default function Dashboard() {
   }
 
   if (!patient) {
-    return null;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-lg w-full shadow-sm">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              Código de Acceso Requerido
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Necesitas introducir tu código de acceso para ver tu plan dietético personalizado.
+            </p>
+            <Button
+              onClick={() => setLocation("/login")}
+              className="bg-medical-green text-white hover:bg-green-700"
+            >
+              Introducir Código
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   const daysUntilExpiry = getDaysUntilExpiry(patient.codeExpiry);

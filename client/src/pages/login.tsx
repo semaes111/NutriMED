@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
@@ -7,7 +6,6 @@ import { z } from "zod";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -32,19 +30,19 @@ export default function Login() {
 
   const validateCodeMutation = useMutation({
     mutationFn: async (data: AccessCodeForm) => {
-      const response = await apiRequest("POST", "/api/auth/validate", data);
+      const response = await apiRequest("POST", "/api/auth/validate-access-code", data);
       return response.json();
     },
     onSuccess: () => {
       toast({
-        title: "Acceso concedido",
-        description: "Bienvenido a su plan dietético personalizado",
+        title: "Código validado",
+        description: "Tu plan dietético ha sido vinculado exitosamente",
       });
       setLocation("/dashboard");
     },
     onError: (error: any) => {
       toast({
-        title: "Error de acceso",
+        title: "Error de validación",
         description: error.message || "Código de acceso inválido o expirado",
         variant: "destructive",
       });
@@ -64,9 +62,9 @@ export default function Login() {
             <div className="w-20 h-20 bg-medical-green rounded-full flex items-center justify-center mx-auto mb-4">
               <UserRound className="text-white text-3xl" size={36} />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Consulta Dietética</h1>
-            <p className="text-medical-gray text-sm">Dr. Sergio Martínez Escobar</p>
-            <p className="text-xs text-medical-gray mt-1">Facultativo Especialista Medicina Intensiva</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Vincular Código de Acceso</h1>
+            <p className="text-medical-gray text-sm">Introduce tu código para acceder al plan</p>
+            <p className="text-xs text-medical-gray mt-1">Dr. Sergio Martínez Escobar</p>
           </div>
 
           {/* Access Code Form */}
@@ -99,7 +97,7 @@ export default function Login() {
                 className="w-full bg-medical-green text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all duration-200"
               >
                 <LogIn className="mr-2" size={16} />
-                {validateCodeMutation.isPending ? "Validando..." : "Acceder a Mi Dieta"}
+                {validateCodeMutation.isPending ? "Validando..." : "Vincular Código"}
               </Button>
             </form>
           </Form>

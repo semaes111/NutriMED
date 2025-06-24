@@ -5,6 +5,7 @@ import {
   recipes, 
   foodItems,
   intermittentFasting,
+  users,
   type Patient, 
   type InsertPatient,
   type DietLevel,
@@ -12,16 +13,24 @@ import {
   type Recipe,
   type FoodItem,
   type IntermittentFasting,
-  type InsertIntermittentFasting
+  type InsertIntermittentFasting,
+  type User,
+  type UpsertUser
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, gte, desc } from "drizzle-orm";
 
 export interface IStorage {
+  // User operations (mandatory for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
   // Patient operations
   getPatientByAccessCode(accessCode: string): Promise<Patient | undefined>;
+  getPatientByUserId(userId: string): Promise<Patient | undefined>;
   createPatient(patient: InsertPatient): Promise<Patient>;
   updatePatientDietLevel(patientId: number, dietLevel: number): Promise<void>;
+  updatePatientUserId(patientId: number, userId: string): Promise<void>;
   
   // Diet operations
   getDietLevels(): Promise<DietLevel[]>;
@@ -35,6 +44,27 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // User operations (mandatory for Replit Auth)
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
   async getPatientByAccessCode(accessCode: string): Promise<Patient | undefined> {
     const [patient] = await db
       .select()
@@ -42,6 +72,20 @@ export class DatabaseStorage implements IStorage {
       .where(
         and(
           eq(patients.accessCode, accessCode),
+          eq(patients.isActive, true),
+          gte(patients.codeExpiry, new Date())
+        )
+      );
+    return patient || undefined;
+  }
+
+  async getPatientByUserId(userId: string): Promise<Patient | undefined> {
+    const [patient] = await db
+      .select()
+      .from(patients)
+      .where(
+        and(
+          eq(patients.userId, userId),
           eq(patients.isActive, true),
           gte(patients.codeExpiry, new Date())
         )
@@ -61,6 +105,13 @@ export class DatabaseStorage implements IStorage {
     await db
       .update(patients)
       .set({ dietLevel })
+      .where(eq(patients.id, patientId));
+  }
+
+  async updatePatientUserId(patientId: number, userId: string): Promise<void> {
+    await db
+      .update(patients)
+      .set({ userId })
       .where(eq(patients.id, patientId));
   }
 
@@ -125,7 +176,7 @@ export class DatabaseStorage implements IStorage {
   async createIntermittentFasting(insertFasting: InsertIntermittentFasting): Promise<IntermittentFasting> {
     const [fasting] = await db
       .insert(intermittentFasting)
-      .values(insertFasting)
+      .values([insertFasting])
       .returning();
     return fasting;
   }

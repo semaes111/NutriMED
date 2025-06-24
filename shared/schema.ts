@@ -1,10 +1,46 @@
-import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  varchar,
+  timestamp,
+  jsonb,
+  index,
+  serial,
+  integer,
+  boolean,
+  json
+} from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
+// Session storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+export const sessions = pgTable(
+  "sessions",
+  {
+    sid: varchar("sid").primaryKey(),
+    sess: jsonb("sess").notNull(),
+    expire: timestamp("expire").notNull(),
+  },
+  (table) => [index("IDX_session_expire").on(table.expire)],
+);
+
+// User storage table.
+// (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
+export const users = pgTable("users", {
+  id: varchar("id").primaryKey().notNull(),
+  email: varchar("email").unique(),
+  firstName: varchar("first_name"),
+  lastName: varchar("last_name"),
+  profileImageUrl: varchar("profile_image_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
 export const patients = pgTable("patients", {
   id: serial("id").primaryKey(),
+  userId: varchar("user_id").references(() => users.id), // Link to Replit user
   name: text("name").notNull(),
   accessCode: text("access_code").notNull().unique(),
   codeExpiry: timestamp("code_expiry").notNull(),
@@ -75,8 +111,16 @@ export const intermittentFasting = pgTable("intermittent_fasting", {
 });
 
 // Relations
-export const patientsRelations = relations(patients, ({ many }) => ({
+export const patientsRelations = relations(patients, ({ one, many }) => ({
+  user: one(users, {
+    fields: [patients.userId],
+    references: [users.id],
+  }),
   fastingPrograms: many(intermittentFasting),
+}));
+
+export const usersRelations = relations(users, ({ many }) => ({
+  patients: many(patients),
 }));
 
 export const dietLevelsRelations = relations(dietLevels, ({ many }) => ({
@@ -133,6 +177,8 @@ export const insertIntermittentFastingSchema = createInsertSchema(intermittentFa
 });
 
 // Types
+export type UpsertUser = typeof users.$inferInsert;
+export type User = typeof users.$inferSelect;
 export type Patient = typeof patients.$inferSelect;
 export type InsertPatient = z.infer<typeof insertPatientSchema>;
 export type DietLevel = typeof dietLevels.$inferSelect;
