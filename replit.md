@@ -30,7 +30,9 @@ The application follows a monorepo structure with a React frontend, Express.js b
 - **Schema Management**: Drizzle migrations
 - **Connection**: Connection pooling with @neondatabase/serverless
 - **Tables**:
-  - `patients`: User accounts with access codes and diet levels
+  - `patients`: User accounts with access codes, diet levels, and medical data
+  - `professionals`: Medical staff with unique access codes for patient management
+  - `weight_records`: Patient weight tracking with timestamps and notes
   - `diet_levels`: Available diet configurations (levels 1-5)
   - `meal_plans`: Meal options categorized by type and diet level
   - `recipes`: Cooking instructions linked to meal plans
@@ -46,6 +48,13 @@ The application follows a monorepo structure with a React frontend, Express.js b
 - **User Linking**: Authenticated users can link their patient access codes
 - **Automatic Expiration**: Codes expire based on timestamp validation
 - **Security**: OAuth2/OpenID Connect with refresh token support
+
+### Professional Management System
+- **Professional Dashboard**: Comprehensive patient management interface
+- **Unique Access Codes**: Auto-generated codes for new patient registration
+- **Nutritional Plan Assignment**: Direct diet level assignment with 30-day validity
+- **Weight Tracking**: Real-time weight recording with evolution graphs
+- **Patient Analytics**: Visual progress monitoring with Recharts integration
 
 ### Diet Management
 - **Multi-Level System**: 5 diet levels with increasing restrictions
@@ -141,6 +150,7 @@ The application follows a monorepo structure with a React frontend, Express.js b
 
 - June 24, 2025. Initial setup
 - June 24, 2025. Added Replit Auth integration for secure user authentication
+- June 24, 2025. Added professional dashboard with patient management, unique access codes, nutritional plan assignment, and weight tracking with evolution graphs
 
 ## User Preferences
 

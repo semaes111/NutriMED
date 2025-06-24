@@ -24,8 +24,11 @@ import {
   Carrot,
   Fish,
   Pizza,
-  Sprout
+  Sprout,
+  Stethoscope,
+  TrendingUp
 } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -34,6 +37,11 @@ export default function Dashboard() {
   const { data: patient, isLoading, error } = useQuery<PatientInfo>({
     queryKey: ["/api/patient/current"],
     retry: false,
+  });
+
+  const { data: weightHistory } = useQuery({
+    queryKey: ["/api/patient/weight-history"],
+    enabled: !!patient,
   });
 
   const logoutMutation = useMutation({
@@ -165,14 +173,25 @@ export default function Dashboard() {
                   </span>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleLogout}
-                className="text-gray-600 hover:text-gray-800"
-              >
-                <LogOut size={18} />
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => setLocation("/professional")}
+                  variant="outline"
+                  size="sm"
+                  className="text-blue-600 border-blue-600 hover:bg-blue-50"
+                >
+                  <Stethoscope className="mr-2" size={16} />
+                  Panel Profesional
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLogout}
+                  className="text-gray-600 hover:text-gray-800"
+                >
+                  <LogOut size={18} />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
@@ -209,6 +228,43 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Weight Tracking Chart */}
+        {weightHistory && weightHistory.length > 0 && (
+          <Card className="mb-8">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                  <TrendingUp size={20} className="text-medical-green" />
+                  Evolución del Peso
+                </h3>
+                <Badge variant="secondary">
+                  {weightHistory.length} registros
+                </Badge>
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={weightHistory.map((record: any) => ({
+                    date: new Date(record.recordedDate).toLocaleDateString('es-ES'),
+                    weight: parseFloat(record.weight),
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis domain={['dataMin - 2', 'dataMax + 2']} />
+                    <Tooltip />
+                    <Line 
+                      type="monotone" 
+                      dataKey="weight" 
+                      stroke="#10b981" 
+                      strokeWidth={3}
+                      dot={{ fill: '#10b981', strokeWidth: 2, r: 4 }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Meal Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

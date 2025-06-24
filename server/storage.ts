@@ -25,12 +25,24 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   
+  // Professional operations
+  getProfessionalByUserId(userId: string): Promise<Professional | undefined>;
+  getProfessionalByAccessCode(accessCode: string): Promise<Professional | undefined>;
+  createProfessional(professional: InsertProfessional): Promise<Professional>;
+  
   // Patient operations
   getPatientByAccessCode(accessCode: string): Promise<Patient | undefined>;
   getPatientByUserId(userId: string): Promise<Patient | undefined>;
+  getPatientById(patientId: number): Promise<Patient | undefined>;
+  getAllPatients(): Promise<Patient[]>;
   createPatient(patient: InsertPatient): Promise<Patient>;
+  updatePatient(patientId: number, updates: Partial<Patient>): Promise<void>;
   updatePatientDietLevel(patientId: number, dietLevel: number): Promise<void>;
   updatePatientUserId(patientId: number, userId: string): Promise<void>;
+  
+  // Weight tracking
+  getWeightRecordsByPatient(patientId: number): Promise<WeightRecord[]>;
+  addWeightRecord(weightRecord: InsertWeightRecord): Promise<WeightRecord>;
   
   // Diet operations
   getDietLevels(): Promise<DietLevel[]>;
@@ -96,7 +108,7 @@ export class DatabaseStorage implements IStorage {
   async createPatient(insertPatient: InsertPatient): Promise<Patient> {
     const [patient] = await db
       .insert(patients)
-      .values(insertPatient)
+      .values([insertPatient])
       .returning();
     return patient;
   }
@@ -113,6 +125,71 @@ export class DatabaseStorage implements IStorage {
       .update(patients)
       .set({ userId })
       .where(eq(patients.id, patientId));
+  }
+
+  // Professional operations
+  async getProfessionalByUserId(userId: string): Promise<Professional | undefined> {
+    const [professional] = await db
+      .select()
+      .from(professionals)
+      .where(eq(professionals.userId, userId));
+    return professional;
+  }
+
+  async getProfessionalByAccessCode(accessCode: string): Promise<Professional | undefined> {
+    const [professional] = await db
+      .select()
+      .from(professionals)
+      .where(eq(professionals.accessCode, accessCode));
+    return professional;
+  }
+
+  async createProfessional(insertProfessional: InsertProfessional): Promise<Professional> {
+    const [professional] = await db
+      .insert(professionals)
+      .values(insertProfessional)
+      .returning();
+    return professional;
+  }
+
+  async getPatientById(patientId: number): Promise<Patient | undefined> {
+    const [patient] = await db
+      .select()
+      .from(patients)
+      .where(eq(patients.id, patientId));
+    return patient;
+  }
+
+  async getAllPatients(): Promise<Patient[]> {
+    return await db
+      .select()
+      .from(patients)
+      .where(eq(patients.isActive, true))
+      .orderBy(desc(patients.createdAt));
+  }
+
+  async updatePatient(patientId: number, updates: Partial<InsertPatient>): Promise<void> {
+    await db
+      .update(patients)
+      .set(updates)
+      .where(eq(patients.id, patientId));
+  }
+
+  // Weight tracking
+  async getWeightRecordsByPatient(patientId: number): Promise<WeightRecord[]> {
+    return await db
+      .select()
+      .from(weightRecords)
+      .where(eq(weightRecords.patientId, patientId))
+      .orderBy(desc(weightRecords.recordedDate));
+  }
+
+  async addWeightRecord(insertWeightRecord: InsertWeightRecord): Promise<WeightRecord> {
+    const [weightRecord] = await db
+      .insert(weightRecords)
+      .values(insertWeightRecord)
+      .returning();
+    return weightRecord;
   }
 
   async getDietLevels(): Promise<DietLevel[]> {

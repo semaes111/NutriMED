@@ -8,7 +8,8 @@ import {
   serial,
   integer,
   boolean,
-  json
+  json,
+  decimal,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
@@ -40,13 +41,40 @@ export const users = pgTable("users", {
 
 export const patients = pgTable("patients", {
   id: serial("id").primaryKey(),
-  userId: varchar("user_id").references(() => users.id), // Link to Replit user
+  userId: varchar("user_id").references(() => users.id),
   name: text("name").notNull(),
   accessCode: text("access_code").notNull().unique(),
   codeExpiry: timestamp("code_expiry").notNull(),
   dietLevel: integer("diet_level").notNull().default(1),
+  age: integer("age"),
+  height: decimal("height", { precision: 5, scale: 2 }),
+  initialWeight: decimal("initial_weight", { precision: 5, scale: 2 }),
+  targetWeight: decimal("target_weight", { precision: 5, scale: 2 }),
+  medicalNotes: text("medical_notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+});
+
+export const weightRecords = pgTable("weight_records", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").references(() => patients.id, { onDelete: "cascade" }).notNull(),
+  weight: decimal("weight", { precision: 5, scale: 2 }).notNull(),
+  recordedDate: timestamp("recorded_date").defaultNow(),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const professionals = pgTable("professionals", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").unique().notNull(),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).unique().notNull(),
+  specialty: varchar("specialty", { length: 255 }),
+  licenseNumber: varchar("license_number", { length: 50 }),
+  accessCode: varchar("access_code", { length: 20 }).unique().notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
 });
 
 export const dietLevels = pgTable("diet_levels", {
@@ -116,7 +144,26 @@ export const patientsRelations = relations(patients, ({ one, many }) => ({
     fields: [patients.userId],
     references: [users.id],
   }),
+  dietLevel: one(dietLevels, {
+    fields: [patients.dietLevel],
+    references: [dietLevels.id],
+  }),
   fastingPrograms: many(intermittentFasting),
+  weightRecords: many(weightRecords),
+}));
+
+export const weightRecordsRelations = relations(weightRecords, ({ one }) => ({
+  patient: one(patients, {
+    fields: [weightRecords.patientId],
+    references: [patients.id],
+  }),
+}));
+
+export const professionalsRelations = relations(professionals, ({ one }) => ({
+  user: one(users, {
+    fields: [professionals.userId],
+    references: [users.id],
+  }),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -155,6 +202,17 @@ export const insertPatientSchema = createInsertSchema(patients).omit({
   createdAt: true,
 });
 
+export const insertWeightRecordSchema = createInsertSchema(weightRecords).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertProfessionalSchema = createInsertSchema(professionals).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertDietLevelSchema = createInsertSchema(dietLevels).omit({
   id: true,
 });
@@ -181,6 +239,10 @@ export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type Patient = typeof patients.$inferSelect;
 export type InsertPatient = z.infer<typeof insertPatientSchema>;
+export type WeightRecord = typeof weightRecords.$inferSelect;
+export type InsertWeightRecord = z.infer<typeof insertWeightRecordSchema>;
+export type Professional = typeof professionals.$inferSelect;
+export type InsertProfessional = z.infer<typeof insertProfessionalSchema>;
 export type DietLevel = typeof dietLevels.$inferSelect;
 export type InsertDietLevel = z.infer<typeof insertDietLevelSchema>;
 export type MealPlan = typeof mealPlans.$inferSelect;

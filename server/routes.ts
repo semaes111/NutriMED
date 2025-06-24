@@ -2,12 +2,25 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
-import { insertPatientSchema } from "@shared/schema";
+import { insertPatientSchema, insertWeightRecordSchema, insertProfessionalSchema } from "@shared/schema";
 import { z } from "zod";
 
 const accessCodeSchema = z.object({
   accessCode: z.string().min(6).max(20),
 });
+
+const professionalAccessCodeSchema = z.object({
+  accessCode: z.string().min(8).max(20),
+});
+
+function generateAccessCode(): string {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = '';
+  for (let i = 0; i < 8; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -137,6 +150,203 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const fasting = await storage.getIntermittentFastingByPatient(patient.id);
       res.json(fasting || null);
+    } catch (error) {
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // Professional routes
+
+  // Validate professional access code
+  app.post("/api/professional/validate", isAuthenticated, async (req: any, res) => {
+    try {
+      const { accessCode } = professionalAccessCodeSchema.parse(req.body);
+      const userId = req.user?.claims?.sub;
+      
+      const professional = await storage.getProfessionalByAccessCode(accessCode);
+      
+      if (!professional) {
+        return res.status(401).json({ 
+          message: "Código de acceso profesional inválido" 
+        });
+      }
+
+      // Link professional to user if not already linked
+      if (professional.userId !== userId) {
+        return res.status(401).json({ 
+          message: "Código de acceso no válido para este usuario" 
+        });
+      }
+      
+      res.json({
+        professional: {
+          id: professional.id,
+          name: professional.name,
+          specialty: professional.specialty,
+          licenseNumber: professional.licenseNumber,
+        }
+      });
+    } catch (error) {
+      res.status(400).json({ 
+        message: "Datos de entrada inválidos" 
+      });
+    }
+  });
+
+  // Get professional profile
+  app.get("/api/professional/profile", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const professional = await storage.getProfessionalByUserId(userId);
+      
+      if (!professional) {
+        return res.status(404).json({ message: "Perfil profesional no encontrado" });
+      }
+
+      res.json({
+        professional: {
+          id: professional.id,
+          name: professional.name,
+          specialty: professional.specialty,
+          licenseNumber: professional.licenseNumber,
+          email: professional.email,
+        }
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // Create new patient
+  app.post("/api/professional/patients", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const professional = await storage.getProfessionalByUserId(userId);
+      
+      if (!professional) {
+        return res.status(403).json({ message: "Acceso no autorizado" });
+      }
+
+      const patientData = insertPatientSchema.parse(req.body);
+      
+      // Generate access code and set expiry
+      const accessCode = generateAccessCode();
+      const codeExpiry = new Date();
+      codeExpiry.setDate(codeExpiry.getDate() + 30); // 30 days validity
+
+      const newPatient = await storage.createPatient({
+        ...patientData,
+        accessCode,
+        codeExpiry,
+      });
+
+      res.json({
+        patient: newPatient,
+        accessCode,
+      });
+    } catch (error) {
+      console.error("Error creating patient:", error);
+      res.status(400).json({ 
+        message: "Error al crear paciente: " + (error as Error).message 
+      });
+    }
+  });
+
+  // Get all patients for professional
+  app.get("/api/professional/patients", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const professional = await storage.getProfessionalByUserId(userId);
+      
+      if (!professional) {
+        return res.status(403).json({ message: "Acceso no autorizado" });
+      }
+
+      const patients = await storage.getAllPatients();
+      res.json(patients);
+    } catch (error) {
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // Update patient diet level
+  app.patch("/api/professional/patients/:patientId/diet-level", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const professional = await storage.getProfessionalByUserId(userId);
+      
+      if (!professional) {
+        return res.status(403).json({ message: "Acceso no autorizado" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const { dietLevel } = req.body;
+
+      await storage.updatePatientDietLevel(patientId, dietLevel);
+      
+      res.json({ message: "Nivel de dieta actualizado exitosamente" });
+    } catch (error) {
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // Add weight record for patient
+  app.post("/api/professional/patients/:patientId/weight", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const professional = await storage.getProfessionalByUserId(userId);
+      
+      if (!professional) {
+        return res.status(403).json({ message: "Acceso no autorizado" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const weightData = insertWeightRecordSchema.parse({
+        ...req.body,
+        patientId,
+      });
+
+      const weightRecord = await storage.addWeightRecord(weightData);
+      
+      res.json(weightRecord);
+    } catch (error) {
+      res.status(400).json({ 
+        message: "Error al agregar registro de peso: " + (error as Error).message 
+      });
+    }
+  });
+
+  // Get weight history for patient
+  app.get("/api/professional/patients/:patientId/weight-history", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const professional = await storage.getProfessionalByUserId(userId);
+      
+      if (!professional) {
+        return res.status(403).json({ message: "Acceso no autorizado" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      const weightHistory = await storage.getWeightRecordsByPatient(patientId);
+      
+      res.json(weightHistory);
+    } catch (error) {
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // Get patient weight history (for patient dashboard)
+  app.get("/api/patient/weight-history", isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.claims?.sub;
+      const patient = await storage.getPatientByUserId(userId);
+      
+      if (!patient) {
+        return res.status(404).json({ message: "Paciente no encontrado" });
+      }
+
+      const weightHistory = await storage.getWeightRecordsByPatient(patient.id);
+      res.json(weightHistory);
     } catch (error) {
       res.status(500).json({ message: "Error interno del servidor" });
     }
