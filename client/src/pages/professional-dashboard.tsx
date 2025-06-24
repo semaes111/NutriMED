@@ -144,10 +144,12 @@ export default function ProfessionalDashboard() {
       const response = await apiRequest("POST", `/api/professional/patients/${selectedPatient.id}/weight`, data);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Peso registrado exitosamente",
-        description: "El registro ha sido añadido al historial del paciente",
+        description: data.newAccessCode ? 
+          `Nuevo código de acceso: ${data.newAccessCode}` : 
+          "El registro ha sido añadido al historial del paciente",
       });
       queryClient.invalidateQueries({ 
         queryKey: ["/api/professional/patients", selectedPatient.id, "weight-history"] 

@@ -388,8 +388,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recordedDate: today
       });
 
+      // Generate new access code and extend expiry date
+      const newAccessCode = generateAccessCode();
+      const newCodeExpiry = new Date();
+      newCodeExpiry.setDate(newCodeExpiry.getDate() + 30); // 30 days from now
+
+      // Update patient with new access code
+      await storage.updatePatientAccessCode(patientId, newAccessCode, newCodeExpiry);
+
       console.log("Weight record created:", weightRecord);
-      res.json(weightRecord);
+      console.log("New access code generated for patient:", { patientId, newAccessCode });
+      
+      res.json({
+        weightRecord,
+        newAccessCode,
+        message: "Peso registrado exitosamente. Nuevo código de acceso generado."
+      });
     } catch (error) {
       console.error("Error adding weight record:", error);
       res.status(500).json({ message: "Error al añadir registro de peso: " + (error as Error).message });
