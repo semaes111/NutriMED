@@ -223,15 +223,15 @@ export default function ProfessionalDashboard() {
         targetWeight: data.targetWeight 
       });
     },
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
       toast({
         title: "Peso objetivo actualizado",
         description: "El objetivo de peso ha sido modificado exitosamente",
       });
-      // Update the selected patient data
+      // Update the selected patient data with the actual submitted value
       setSelectedPatient(prev => prev ? {
         ...prev, 
-        targetWeight: targetWeightForm.getValues().targetWeight.toString()
+        targetWeight: variables.targetWeight.toString()
       } : null);
       // Reset form and refresh data
       targetWeightForm.reset();
