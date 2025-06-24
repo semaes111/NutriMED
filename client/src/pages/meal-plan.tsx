@@ -107,7 +107,7 @@ export default function MealPlan() {
       case 'breakfast':
         return {
           icon: <Sun className="text-yellow-600" size={20} />,
-          title: 'Plan de Desayuno',
+          title: 'Plan de Desayuno + Media Mañana',
           subtitle: 'Completo con índice glucémico bajo',
           bgColor: 'bg-yellow-100'
         };
