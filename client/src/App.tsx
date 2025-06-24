@@ -19,15 +19,16 @@ function Router() {
 
   return (
     <Switch>
+      <Route path="/login" component={PatientLogin} />
+      <Route path="/professional-access" component={ProfessionalAccess} />
+      <Route path="/professional" component={ProfessionalDashboard} />
+      
       {isLoading || !isAuthenticated ? (
         <Route path="/" component={Landing} />
       ) : (
         <>
           <Route path="/" component={Dashboard} />
-          <Route path="/login" component={Login} />
           <Route path="/dashboard" component={Dashboard} />
-          <Route path="/professional-access" component={ProfessionalAccess} />
-          <Route path="/professional" component={ProfessionalDashboard} />
           <Route path="/meal-plan/:category" component={MealPlan} />
           <Route path="/intermittent-fasting" component={IntermittentFasting} />
         </>

@@ -1,8 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserRound, LogIn, Stethoscope, Heart, Shield } from "lucide-react";
+import { UserRound, LogIn, Stethoscope, Heart, Shield, UserCheck, Settings } from "lucide-react";
+import { useLocation } from "wouter";
 
 export default function Landing() {
+  const [, setLocation] = useLocation();
   const handleLogin = () => {
     window.location.href = "/api/login";
   };
@@ -48,20 +50,43 @@ export default function Landing() {
             </div>
           </div>
 
-          {/* Login Section */}
-          <div className="text-center">
+          {/* Access Section */}
+          <div className="text-center space-y-4">
             <p className="text-gray-600 mb-6">
-              Inicia sesión para acceder a tu plan dietético personalizado
+              Acceda a su plan dietético personalizado
             </p>
             
             <Button
-              onClick={handleLogin}
+              onClick={() => setLocation('/login')}
               size="lg"
-              className="bg-medical-green text-white py-4 px-8 rounded-lg font-medium hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all duration-200"
+              className="w-full bg-medical-green text-white py-4 px-8 rounded-lg font-medium hover:bg-green-700 focus:ring-4 focus:ring-green-200 transition-all duration-200"
             >
-              <LogIn className="mr-3" size={20} />
-              Iniciar Sesión con Replit
+              <UserCheck className="mr-3" size={20} />
+              Acceso del Paciente
             </Button>
+            
+            <div className="text-center text-sm text-gray-500">
+              <p>¿Es usted un profesional médico?</p>
+              <Button 
+                onClick={() => setLocation('/professional-access')}
+                variant="outline"
+                className="mt-2 border-medical-blue text-medical-blue hover:bg-medical-blue hover:text-white"
+              >
+                <Settings className="mr-2" size={16} />
+                Panel Profesional
+              </Button>
+            </div>
+            
+            <div className="pt-4 border-t border-gray-200">
+              <Button
+                onClick={handleLogin}
+                variant="outline"
+                className="w-full border-gray-300 text-gray-600 hover:bg-gray-50 text-sm py-2"
+              >
+                <LogIn className="mr-2" size={16} />
+                Iniciar Sesión con Replit
+              </Button>
+            </div>
           </div>
 
           {/* Professional Footer */}
