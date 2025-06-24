@@ -189,11 +189,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async addWeightRecord(insertWeightRecord: any): Promise<any> {
-    const [weightRecord] = await db
-      .insert(weightRecords)
-      .values(insertWeightRecord)
-      .returning();
-    return weightRecord;
+    try {
+      console.log("Storage: Adding weight record:", insertWeightRecord);
+      const [weightRecord] = await db
+        .insert(weightRecords)
+        .values({
+          ...insertWeightRecord,
+          recordedDate: insertWeightRecord.recordedDate || new Date()
+        })
+        .returning();
+      console.log("Storage: Weight record created:", weightRecord);
+      return weightRecord;
+    } catch (error) {
+      console.error("Storage: Error adding weight record:", error);
+      throw error;
+    }
   }
 
   async getDietLevels(): Promise<DietLevel[]> {

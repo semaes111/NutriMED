@@ -506,10 +506,8 @@ export default function ProfessionalDashboard() {
                           <Button
                             size="sm"
                             onClick={() => {
-                              console.log("Button clicked, patient:", patient);
                               setSelectedPatient(patient);
                               setActiveTab("analytics");
-                              console.log("Active tab set to analytics");
                             }}
                             className="bg-medical-green text-white hover:bg-green-700"
                           >
