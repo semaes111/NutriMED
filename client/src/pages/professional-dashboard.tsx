@@ -79,7 +79,7 @@ export default function ProfessionalDashboard() {
 
   // Get weight history for selected patient
   const { data: weightHistory, refetch: refetchWeightHistory } = useQuery({
-    queryKey: ["/api/professional/patients", selectedPatient?.id, "weight-history"],
+    queryKey: [`/api/professional/patients/${selectedPatient?.id}/weight-history`],
     enabled: !!selectedPatient,
     staleTime: 0, // Always fetch fresh data
     cacheTime: 0, // Don't cache the data
@@ -157,7 +157,7 @@ export default function ProfessionalDashboard() {
       setTimeout(() => {
         refetchWeightHistory();
         queryClient.invalidateQueries({ 
-          queryKey: ["/api/professional/patients", selectedPatient.id, "weight-history"] 
+          queryKey: [`/api/professional/patients/${selectedPatient.id}/weight-history`] 
         });
         queryClient.invalidateQueries({ 
           queryKey: ["/api/professional/patients"] 
