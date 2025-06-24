@@ -81,6 +81,8 @@ export default function ProfessionalDashboard() {
   const { data: weightHistory, refetch: refetchWeightHistory } = useQuery({
     queryKey: ["/api/professional/patients", selectedPatient?.id, "weight-history"],
     enabled: !!selectedPatient,
+    staleTime: 0, // Always fetch fresh data
+    cacheTime: 0, // Don't cache the data
   });
 
   const createPatientForm = useForm<CreatePatientForm>({
@@ -152,10 +154,15 @@ export default function ProfessionalDashboard() {
           "El registro ha sido añadido al historial del paciente",
       });
       // Force immediate refresh of weight history and patients list
-      refetchWeightHistory();
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/professional/patients"] 
-      });
+      setTimeout(() => {
+        refetchWeightHistory();
+        queryClient.invalidateQueries({ 
+          queryKey: ["/api/professional/patients", selectedPatient.id, "weight-history"] 
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: ["/api/professional/patients"] 
+        });
+      }, 100);
       
       setShowAddWeight(false);
       addWeightForm.reset();
@@ -190,9 +197,14 @@ export default function ProfessionalDashboard() {
   });
 
   const formatWeightData = (data: any[]) => {
-    if (!data || data.length === 0) return [];
+    console.log('Raw weight data:', data);
     
-    return data
+    if (!data || data.length === 0) {
+      console.log('No weight data available');
+      return [];
+    }
+    
+    const formatted = data
       .filter(record => record.weight && record.recordedDate) // Filter out invalid records
       .map(record => {
         const date = new Date(record.recordedDate);
@@ -204,18 +216,25 @@ export default function ProfessionalDashboard() {
           return null;
         }
         
-        return {
+        const formattedRecord = {
           date: date.toLocaleDateString('es-ES', { 
             day: '2-digit', 
-            month: '2-digit' 
+            month: '2-digit',
+            year: '2-digit'
           }),
           weight: weight,
           fullDate: record.recordedDate,
           notes: record.notes
         };
+        
+        console.log('Formatted record:', formattedRecord);
+        return formattedRecord;
       })
       .filter(record => record !== null) // Remove invalid records
       .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime());
+    
+    console.log('Final formatted data for chart:', formatted);
+    return formatted;
   };
 
   if (isProfessionalLoading) {
