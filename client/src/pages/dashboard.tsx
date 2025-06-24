@@ -42,7 +42,16 @@ export default function Dashboard() {
     if (sessionData) {
       try {
         const session = JSON.parse(sessionData);
-        setPatientSession(session);
+        // Validate session hasn't expired
+        const loginTime = new Date(session.loginTime);
+        const now = new Date();
+        const hoursSinceLogin = (now.getTime() - loginTime.getTime()) / (1000 * 60 * 60);
+        
+        if (hoursSinceLogin < 24 && session.patient) { // 24 hour session limit
+          setPatientSession(session);
+        } else {
+          localStorage.removeItem('patientSession');
+        }
       } catch (error) {
         console.error('Error parsing patient session:', error);
         localStorage.removeItem('patientSession');
