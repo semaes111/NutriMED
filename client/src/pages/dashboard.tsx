@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -33,10 +33,26 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [patientSession, setPatientSession] = useState(null);
+
+  // Check for patient session (access code login)
+  useEffect(() => {
+    const sessionData = localStorage.getItem('patientSession');
+    if (sessionData) {
+      try {
+        const session = JSON.parse(sessionData);
+        setPatientSession(session);
+      } catch (error) {
+        console.error('Error parsing patient session:', error);
+        localStorage.removeItem('patientSession');
+      }
+    }
+  }, []);
 
   const { data: patient, isLoading, error } = useQuery<PatientInfo>({
     queryKey: ["/api/patient/current"],
     retry: false,
+    enabled: !patientSession, // Only query if no patient session
   });
 
   const { data: weightHistory } = useQuery({
@@ -91,7 +107,10 @@ export default function Dashboard() {
     return diffDays;
   };
 
-  if (isLoading) {
+  // Get current patient data - either from API or from session
+  const currentPatient = patientSession?.patient || patient?.patient;
+  
+  if (isLoading && !patientSession) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -102,7 +121,7 @@ export default function Dashboard() {
     );
   }
 
-  if (!patient) {
+  if (!currentPatient) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Card className="max-w-lg w-full shadow-sm">
@@ -139,7 +158,7 @@ export default function Dashboard() {
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Mi Plan Dietético</h1>
-                <p className="text-sm text-medical-gray">Paciente: {patient.name}</p>
+                <p className="text-sm text-medical-gray">Paciente: {currentPatient.name}</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -173,6 +192,13 @@ export default function Dashboard() {
                   </span>
                 </div>
               </div>
+              
+              {/* Session Type Badge */}
+              {patientSession && (
+                <Badge variant="secondary" className="text-xs">
+                  Sesión Temporal
+                </Badge>
+              )}
               <div className="flex gap-2">
                 <Button
                   onClick={() => setLocation("/professional-access")}
@@ -207,21 +233,21 @@ export default function Dashboard() {
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-4">
                   <div className="w-16 h-16 bg-medical-blue rounded-full flex items-center justify-center">
-                    <span className="text-white font-bold text-xl">{patient.dietLevel}</span>
+                    <span className="text-white font-bold text-xl">{currentPatient.dietLevel}</span>
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-gray-900">
                       Plan Nutricional Personalizado
                     </h3>
                     <p className="text-medical-gray">
-                      Nivel {patient.dietLevel} - Plan equilibrado con control glucémico
+                      Nivel {currentPatient.dietLevel} - Plan equilibrado con control glucémico
                     </p>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-sm text-gray-500">Código válido hasta</div>
                   <div className="font-medium text-gray-900">
-                    {new Date(patient.codeExpiry).toLocaleDateString('es-ES')}
+                    {new Date(currentPatient.codeExpiry).toLocaleDateString('es-ES')}
                   </div>
                 </div>
               </div>
@@ -422,7 +448,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-gray-900">Plan dietético personalizado activo</p>
-                  <p className="text-xs text-gray-500">Nivel {patient.dietLevel} asignado por Dr. Martínez</p>
+                  <p className="text-xs text-gray-500">Nivel {currentPatient.dietLevel} asignado por Dr. Martínez</p>
                 </div>
               </div>
               
