@@ -66,6 +66,8 @@ export default function PatientLogin() {
         description: error.message || "Código de acceso inválido o expirado",
         variant: "destructive",
       });
+      // Clear the form
+      form.reset();
     },
   });
 

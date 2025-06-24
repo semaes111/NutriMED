@@ -155,6 +155,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Patient routes
+
+  // Validate patient access code - no auth required for initial validation
+  app.post("/api/patient/validate", async (req, res) => {
+    try {
+      console.log("Patient validation request body:", req.body);
+      const { accessCode } = req.body;
+      
+      if (!accessCode) {
+        console.log("No access code provided");
+        return res.status(400).json({ message: "Código de acceso requerido" });
+      }
+
+      console.log("Looking for patient with access code:", accessCode);
+      const patient = await storage.getPatientByAccessCode(accessCode);
+      console.log("Patient found:", patient);
+      
+      if (!patient || !patient.isActive) {
+        console.log("Patient not found or inactive");
+        return res.status(404).json({ message: "Código de acceso no válido" });
+      }
+
+      // Check if code is expired
+      const now = new Date();
+      if (patient.codeExpiry && new Date(patient.codeExpiry) < now) {
+        console.log("Patient code expired");
+        return res.status(410).json({ message: "Código de acceso expirado" });
+      }
+
+      console.log("Patient validation successful");
+      res.json({
+        valid: true,
+        patient: {
+          id: patient.id,
+          name: patient.name,
+          dietLevel: patient.dietLevel,
+          accessCode: patient.accessCode,
+          codeExpiry: patient.codeExpiry,
+          age: patient.age,
+          height: patient.height,
+          initialWeight: patient.initialWeight,
+          targetWeight: patient.targetWeight,
+          medicalNotes: patient.medicalNotes
+        }
+      });
+    } catch (error) {
+      console.error("Error validating patient code:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
   // Professional routes
 
   // Validate professional access code - no auth required for initial validation
