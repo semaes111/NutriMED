@@ -175,7 +175,7 @@ export default function Dashboard() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  onClick={() => setLocation("/professional")}
+                  onClick={() => setLocation("/professional-access")}
                   variant="outline"
                   size="sm"
                   className="text-blue-600 border-blue-600 hover:bg-blue-50"

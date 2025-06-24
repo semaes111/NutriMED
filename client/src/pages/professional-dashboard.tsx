@@ -52,23 +52,28 @@ export default function ProfessionalDashboard() {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showCreatePatient, setShowCreatePatient] = useState(false);
   const [showAddWeight, setShowAddWeight] = useState(false);
+  
+  // Check if professional is validated (from localStorage)
+  const professionalInfo = localStorage.getItem('professionalInfo');
+  const isValidated = !!professionalInfo;
 
   // Get professional profile
   const { data: professional, isLoading: isProfessionalLoading } = useQuery({
     queryKey: ["/api/professional/profile"],
     retry: false,
+    enabled: isValidated,
   });
 
   // Get all patients
   const { data: patients, isLoading: isPatientsLoading } = useQuery({
     queryKey: ["/api/professional/patients"],
-    enabled: !!professional,
+    enabled: isValidated && !!professional,
   });
 
   // Get diet levels
   const { data: dietLevels } = useQuery({
     queryKey: ["/api/diet-levels"],
-    enabled: !!professional,
+    enabled: isValidated,
   });
 
   // Get weight history for selected patient
@@ -185,6 +190,12 @@ export default function ProfessionalDashboard() {
     );
   }
 
+  // Redirect to professional access if not validated
+  if (!isValidated) {
+    window.location.href = '/professional-access';
+    return null;
+  }
+
   if (!professional) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -192,14 +203,37 @@ export default function ProfessionalDashboard() {
           <CardContent className="p-8 text-center">
             <Stethoscope className="w-16 h-16 text-medical-green mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Acceso Profesional Requerido
+              Panel Profesional
             </h2>
             <p className="text-gray-600 mb-6">
-              Necesitas validar tu código de acceso profesional para gestionar pacientes.
+              Ingrese su código de acceso profesional para gestionar pacientes.
             </p>
-            <Button className="bg-medical-green text-white hover:bg-green-700">
-              Validar Código Profesional
-            </Button>
+            <div className="space-y-4">
+              <Input
+                id="professionalCode"
+                placeholder="Código profesional (ej. PROF2025)"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const input = e.target as HTMLInputElement;
+                    if (input.value.trim()) {
+                      // Here we would validate the code
+                      console.log("Validating code:", input.value);
+                    }
+                  }
+                }}
+              />
+              <Button 
+                className="w-full bg-medical-green text-white hover:bg-green-700"
+                onClick={() => {
+                  const input = document.getElementById('professionalCode') as HTMLInputElement;
+                  if (input.value.trim()) {
+                    window.location.href = '/professional-access';
+                  }
+                }}
+              >
+                Validar Código Profesional
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>

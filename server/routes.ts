@@ -157,25 +157,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Professional routes
 
-  // Validate professional access code
-  app.post("/api/professional/validate", isAuthenticated, async (req: any, res) => {
+  // Validate professional access code - no auth required for initial validation
+  app.post("/api/professional/validate", async (req, res) => {
     try {
-      const { accessCode } = professionalAccessCodeSchema.parse(req.body);
-      const userId = req.user?.claims?.sub;
+      const { accessCode } = req.body;
       
-      const professional = await storage.getProfessionalByAccessCode(accessCode);
-      
-      if (!professional) {
-        return res.status(401).json({ 
-          message: "Código de acceso profesional inválido" 
-        });
+      if (!accessCode) {
+        return res.status(400).json({ message: "Código de acceso requerido" });
       }
 
-      // Link professional to user if not already linked
-      if (professional.userId !== userId) {
-        return res.status(401).json({ 
-          message: "Código de acceso no válido para este usuario" 
-        });
+      const professional = await storage.getProfessionalByAccessCode(accessCode);
+      
+      if (!professional || !professional.isActive) {
+        return res.status(404).json({ message: "Código profesional no válido" });
       }
       
       res.json({
@@ -197,12 +191,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/professional/profile", isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.claims?.sub;
+      console.log("Fetching professional profile for userId:", userId);
+      
       const professional = await storage.getProfessionalByUserId(userId);
       
       if (!professional) {
+        console.log("No professional found for userId:", userId);
         return res.status(404).json({ message: "Perfil profesional no encontrado" });
       }
 
+      console.log("Professional found:", professional);
       res.json({
         professional: {
           id: professional.id,
@@ -213,6 +211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
     } catch (error) {
+      console.error("Error fetching professional profile:", error);
       res.status(500).json({ message: "Error interno del servidor" });
     }
   });
