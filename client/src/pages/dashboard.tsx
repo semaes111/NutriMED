@@ -353,26 +353,78 @@ export default function Dashboard() {
                   <TrendingUp size={20} className="text-medical-green" />
                   Evolución del Peso
                 </h3>
-                <Badge variant="secondary">
-                  {weightHistory.length} registros
-                </Badge>
+                <div className="flex items-center gap-4">
+                  {(() => {
+                    const sortedHistory = weightHistory.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                    const initialWeight = parseFloat(currentPatient.initialWeight);
+                    const latestWeight = parseFloat(sortedHistory[sortedHistory.length - 1]?.weight || currentPatient.initialWeight);
+                    const weightDiff = latestWeight - initialWeight;
+                    const isLoss = weightDiff < 0;
+                    
+                    return (
+                      <div className="flex items-center gap-2">
+                        <Badge 
+                          variant="secondary" 
+                          className={`${isLoss ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                        >
+                          {isLoss ? '↓' : '↑'} {Math.abs(weightDiff).toFixed(1)} kg
+                        </Badge>
+                        <Badge variant="secondary">
+                          {weightHistory.length} registros
+                        </Badge>
+                      </div>
+                    );
+                  })()}
+                </div>
               </div>
+              
+              {/* Weight Summary Stats */}
+              <div className="grid grid-cols-3 gap-4 mb-6">
+                <div className="text-center p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-gray-600">Peso Inicial</p>
+                  <p className="text-lg font-bold text-blue-600">{currentPatient.initialWeight} kg</p>
+                </div>
+                <div className="text-center p-3 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-600">Peso Actual</p>
+                  <p className="text-lg font-bold text-gray-900">
+                    {weightHistory.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.weight || currentPatient.initialWeight} kg
+                  </p>
+                </div>
+                <div className="text-center p-3 bg-medical-green/10 rounded-lg">
+                  <p className="text-sm text-gray-600">Objetivo</p>
+                  <p className="text-lg font-bold text-medical-green">{currentPatient.targetWeight} kg</p>
+                </div>
+              </div>
+
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={weightHistory
-                    .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-                    .map((record: any, index: number) => ({
-                      date: `${new Date(record.createdAt).toLocaleDateString('es-ES', { 
-                        day: '2-digit', 
-                        month: '2-digit' 
-                      })} (${new Date(record.createdAt).toLocaleTimeString('es-ES', { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })})`,
-                      weight: parseFloat(record.weight),
-                      fullDate: record.createdAt,
-                      index: index + 1
-                    }))}>
+                  <LineChart data={(() => {
+                    const sortedHistory = weightHistory.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                    const initialWeight = parseFloat(currentPatient.initialWeight);
+                    
+                    return sortedHistory.map((record: any, index: number) => {
+                      const currentWeight = parseFloat(record.weight);
+                      const prevWeight = index > 0 ? parseFloat(sortedHistory[index - 1].weight) : initialWeight;
+                      const weightChange = currentWeight - prevWeight;
+                      const isGain = weightChange > 0;
+                      
+                      return {
+                        date: `${new Date(record.createdAt).toLocaleDateString('es-ES', { 
+                          day: '2-digit', 
+                          month: '2-digit' 
+                        })} (${new Date(record.createdAt).toLocaleTimeString('es-ES', { 
+                          hour: '2-digit', 
+                          minute: '2-digit' 
+                        })})`,
+                        weight: currentWeight,
+                        fullDate: record.createdAt,
+                        index: index + 1,
+                        change: weightChange,
+                        isGain: isGain,
+                        changeFromInitial: currentWeight - initialWeight
+                      };
+                    });
+                  })()}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="date" 
@@ -383,19 +435,67 @@ export default function Dashboard() {
                     />
                     <YAxis domain={['dataMin - 2', 'dataMax + 2']} />
                     <Tooltip 
-                      formatter={(value: any, name: any) => [`${value} kg`, 'Peso']}
-                      labelFormatter={(label: any) => `Registro: ${label}`}
+                      content={({ active, payload, label }) => {
+                        if (active && payload && payload.length) {
+                          const data = payload[0].payload;
+                          const changeColor = data.change >= 0 ? '#ef4444' : '#10b981';
+                          const changeIcon = data.change >= 0 ? '↑' : '↓';
+                          
+                          return (
+                            <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                              <p className="font-semibold">{label}</p>
+                              <p className="text-gray-700">Peso: {data.weight} kg</p>
+                              {data.index > 1 && (
+                                <p style={{ color: changeColor }} className="font-medium">
+                                  {changeIcon} {Math.abs(data.change).toFixed(1)} kg vs anterior
+                                </p>
+                              )}
+                              <p className={`font-medium ${data.changeFromInitial >= 0 ? 'text-red-600' : 'text-green-600'}`}>
+                                {data.changeFromInitial >= 0 ? '↑' : '↓'} {Math.abs(data.changeFromInitial).toFixed(1)} kg desde inicio
+                              </p>
+                            </div>
+                          );
+                        }
+                        return null;
+                      }}
                     />
                     <Line 
                       type="monotone" 
                       dataKey="weight" 
-                      stroke="#10b981" 
+                      stroke="#6366f1" 
                       strokeWidth={3}
-                      dot={{ fill: '#10b981', strokeWidth: 2, r: 6 }}
-                      activeDot={{ r: 8, stroke: '#10b981', strokeWidth: 2 }}
+                      dot={(props: any) => {
+                        const { cx, cy, payload } = props;
+                        if (!payload) return null;
+                        
+                        const color = payload.change >= 0 ? '#ef4444' : '#10b981';
+                        return (
+                          <circle 
+                            cx={cx} 
+                            cy={cy} 
+                            r={6} 
+                            fill={color} 
+                            stroke={color} 
+                            strokeWidth={2}
+                          />
+                        );
+                      }}
+                      activeDot={{ r: 8, stroke: '#6366f1', strokeWidth: 2 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
+              </div>
+              
+              {/* Legend */}
+              <div className="flex items-center justify-center gap-6 mt-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-gray-600">Ganancia de peso</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-gray-600">Pérdida de peso</span>
+                </div>
               </div>
             </CardContent>
           </Card>
