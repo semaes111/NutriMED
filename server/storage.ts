@@ -135,8 +135,7 @@ export class DatabaseStorage implements IStorage {
       .update(patients)
       .set({ 
         accessCode,
-        codeExpiry,
-        updatedAt: new Date()
+        codeExpiry
       })
       .where(eq(patients.id, patientId));
   }

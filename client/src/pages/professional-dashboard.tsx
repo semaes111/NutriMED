@@ -78,7 +78,7 @@ export default function ProfessionalDashboard() {
   });
 
   // Get weight history for selected patient
-  const { data: weightHistory } = useQuery({
+  const { data: weightHistory, refetch: refetchWeightHistory } = useQuery({
     queryKey: ["/api/professional/patients", selectedPatient?.id, "weight-history"],
     enabled: !!selectedPatient,
   });
@@ -151,12 +151,12 @@ export default function ProfessionalDashboard() {
           `Nuevo código de acceso: ${data.newAccessCode}` : 
           "El registro ha sido añadido al historial del paciente",
       });
-      queryClient.invalidateQueries({ 
-        queryKey: ["/api/professional/patients", selectedPatient.id, "weight-history"] 
-      });
+      // Force immediate refresh of weight history and patients list
+      refetchWeightHistory();
       queryClient.invalidateQueries({ 
         queryKey: ["/api/professional/patients"] 
       });
+      
       setShowAddWeight(false);
       addWeightForm.reset();
     },
@@ -207,8 +207,7 @@ export default function ProfessionalDashboard() {
         return {
           date: date.toLocaleDateString('es-ES', { 
             day: '2-digit', 
-            month: '2-digit', 
-            year: 'numeric' 
+            month: '2-digit' 
           }),
           weight: weight,
           fullDate: record.recordedDate,
