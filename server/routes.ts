@@ -234,18 +234,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "Acceso no autorizado" });
       }
 
-      const patientData = insertPatientSchema.parse(req.body);
-      
       // Generate access code and set expiry
       const accessCode = generateAccessCode();
       const codeExpiry = new Date();
       codeExpiry.setDate(codeExpiry.getDate() + 30); // 30 days validity
 
-      const newPatient = await storage.createPatient({
-        ...patientData,
+      // Create patient data with proper types
+      const patientData = {
+        name: req.body.name,
+        age: parseInt(req.body.age),
+        height: req.body.height.toString(),
+        initialWeight: req.body.initialWeight.toString(),
+        targetWeight: req.body.targetWeight.toString(),
+        dietLevel: parseInt(req.body.dietLevel),
+        medicalNotes: req.body.medicalNotes || null,
         accessCode,
         codeExpiry,
-      });
+        isActive: true,
+      };
+
+      console.log("Creating patient with data:", patientData);
+      const newPatient = await storage.createPatient(patientData);
 
       res.json({
         patient: newPatient,

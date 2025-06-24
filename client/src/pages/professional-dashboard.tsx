@@ -105,19 +105,31 @@ export default function ProfessionalDashboard() {
 
   const createPatientMutation = useMutation({
     mutationFn: async (data: CreatePatientForm) => {
-      const response = await apiRequest("POST", "/api/professional/patients", data);
+      console.log("Creating patient with data:", data);
+      const response = await fetch("/api/professional/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Error al crear paciente");
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
       toast({
         title: "Paciente creado exitosamente",
-        description: `Código de acceso: ${data.accessCode}`,
+        description: `Código de acceso: ${data.patient.accessCode}`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/professional/patients"] });
       setShowCreatePatient(false);
       createPatientForm.reset();
     },
     onError: (error: any) => {
+      console.error("Error creating patient:", error);
       toast({
         title: "Error al crear paciente",
         description: error.message,
