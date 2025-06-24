@@ -50,14 +50,20 @@ export default function PatientLogin() {
         title: "Acceso autorizado",
         description: `Bienvenido/a ${data.patient.name}`,
       });
-      // Store patient session info
-      localStorage.setItem('patientSession', JSON.stringify({
+      // Store patient session info with proper structure
+      const sessionData = {
         patientId: data.patient.id,
         accessCode: data.patient.accessCode,
         loginTime: new Date().toISOString(),
-        patient: data.patient
-      }));
-      setLocation("/dashboard");
+        patient: data.patient,
+        isPatientSession: true
+      };
+      localStorage.setItem('patientSession', JSON.stringify(sessionData));
+      
+      // Small delay to ensure localStorage is updated
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 100);
     },
     onError: (error) => {
       console.error("Patient validation error:", error);

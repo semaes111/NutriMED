@@ -38,24 +38,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get current patient (for authenticated users)
-  app.get("/api/patient/current", isAuthenticated, async (req: any, res) => {
+  // Get current patient (for authenticated users or patient sessions)
+  app.get("/api/patient/current", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
-      const patient = await storage.getPatientByUserId(userId);
-      
-      if (!patient) {
-        return res.status(404).json({ message: "Paciente no encontrado" });
-      }
-
-      res.json({
-        patient: {
-          id: patient.id,
-          name: patient.name,
-          dietLevel: patient.dietLevel,
-          codeExpiry: patient.codeExpiry,
+      // Check if user is authenticated with Replit Auth
+      if (req.isAuthenticated && req.isAuthenticated()) {
+        const userId = req.user?.claims?.sub;
+        const patient = await storage.getPatientByUserId(userId);
+        
+        if (!patient) {
+          return res.status(404).json({ message: "Paciente no encontrado" });
         }
-      });
+        
+        return res.json({
+          patient: {
+            id: patient.id,
+            name: patient.name,
+            dietLevel: patient.dietLevel,
+            codeExpiry: patient.codeExpiry,
+          }
+        });
+      }
+      
+      // Check for patient session header
+      const patientSessionHeader = req.headers['x-patient-session'];
+      if (patientSessionHeader) {
+        try {
+          const sessionData = JSON.parse(patientSessionHeader as string);
+          const patient = await storage.getPatientById(sessionData.patientId);
+          
+          if (patient && patient.accessCode === sessionData.accessCode) {
+            return res.json({
+              patient: {
+                id: patient.id,
+                name: patient.name,
+                dietLevel: patient.dietLevel,
+                codeExpiry: patient.codeExpiry,
+              }
+            });
+          }
+        } catch (error) {
+          console.error('Error parsing patient session header:', error);
+        }
+      }
+      
+      return res.status(401).json({ message: "Unauthorized" });
     } catch (error) {
       res.status(500).json({ message: "Error interno del servidor" });
     }
@@ -462,35 +489,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get patient weight history (for patient dashboard)
-  app.get("/api/patient/weight-history/:patientId?", isAuthenticated, async (req: any, res) => {
+  app.get("/api/patient/weight-history/:patientId?", async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
       const requestedPatientId = req.params.patientId;
       
-      let patient;
-      
-      if (requestedPatientId) {
-        // If patient ID is provided, get that specific patient
-        patient = await storage.getPatientById(parseInt(requestedPatientId));
-      } else {
-        // Otherwise, get patient by user ID (authenticated user)
-        patient = await storage.getPatientByUserId(userId);
-      }
-      
-      if (!patient) {
-        return res.status(404).json({ message: "Paciente no encontrado" });
-      }
+      // Check if user is authenticated with Replit Auth
+      if (req.isAuthenticated && req.isAuthenticated()) {
+        const userId = req.user?.claims?.sub;
+        let patient;
+        
+        if (requestedPatientId) {
+          patient = await storage.getPatientById(parseInt(requestedPatientId));
+        } else {
+          patient = await storage.getPatientByUserId(userId);
+        }
+        
+        if (!patient) {
+          return res.status(404).json({ message: "Paciente no encontrado" });
+        }
 
-      console.log("Fetching weight history for patient ID:", patient.id);
-      const weightHistory = await storage.getWeightRecordsByPatient(patient.id);
-      console.log("Weight history found:", weightHistory.length, "records");
+        console.log("Fetching weight history for patient ID:", patient.id);
+        const weightHistory = await storage.getWeightRecordsByPatient(patient.id);
+        console.log("Weight history found:", weightHistory.length, "records");
+        
+        const sortedHistory = weightHistory.sort((a, b) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        
+        return res.json(sortedHistory);
+      }
       
-      // Sort by creation date to maintain chronological order
-      const sortedHistory = weightHistory.sort((a, b) => 
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
+      // Check for patient session header
+      const patientSessionHeader = req.headers['x-patient-session'];
+      if (patientSessionHeader && requestedPatientId) {
+        try {
+          const sessionData = JSON.parse(patientSessionHeader as string);
+          const patient = await storage.getPatientById(parseInt(requestedPatientId));
+          
+          if (patient && patient.accessCode === sessionData.accessCode && patient.id === parseInt(requestedPatientId)) {
+            console.log("Fetching weight history for patient ID:", patient.id);
+            const weightHistory = await storage.getWeightRecordsByPatient(patient.id);
+            console.log("Weight history found:", weightHistory.length, "records");
+            
+            const sortedHistory = weightHistory.sort((a, b) => 
+              new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+            );
+            
+            return res.json(sortedHistory);
+          }
+        } catch (error) {
+          console.error('Error parsing patient session header:', error);
+        }
+      }
       
-      res.json(sortedHistory);
+      return res.status(401).json({ message: "Unauthorized" });
     } catch (error) {
       console.error("Error fetching patient weight history:", error);
       res.status(500).json({ message: "Error interno del servidor" });
