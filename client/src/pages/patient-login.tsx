@@ -159,7 +159,7 @@ export default function PatientLogin() {
         {/* Footer */}
         <div className="text-center text-xs text-gray-500">
           <p>Sistema de Consulta Nutricional • Privado y Seguro</p>
-          <p className="mt-1">Código de ejemplo para pruebas: Y10UDRY5</p>
+          <p className="mt-1">Su código de acceso temporal fue proporcionado por el consultorio</p>
         </div>
       </div>
     </div>
