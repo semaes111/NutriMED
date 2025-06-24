@@ -25,7 +25,8 @@ import {
   ClipboardList,
   TrendingUp,
   Activity,
-  LogOut
+  LogOut,
+  Search
 } from "lucide-react";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
@@ -347,6 +348,21 @@ export default function ProfessionalDashboard() {
           </TabsList>
 
           <TabsContent value="patients" className="space-y-6">
+            {/* Search Bar */}
+            <Card>
+              <CardContent className="p-6">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Buscar pacientes por nombre o código de acceso..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Quick Actions */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Card>
