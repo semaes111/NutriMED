@@ -1,10 +1,14 @@
-import { useParams } from "wouter";
-import { useLocation } from "wouter";
+import { useEffect, useState } from "react";
+import { useParams, useLocation } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FoodItem } from "@/components/ui/food-item";
 import { RecipeCard } from "@/components/ui/recipe-card";
+import { useToast } from "@/hooks/use-toast";
+import { PatientInfo } from "@/lib/types";
+import { isUnauthorizedError } from "@/lib/authUtils";
 import { 
   ArrowLeft, 
   Sun, 
@@ -18,9 +22,81 @@ import {
 } from "lucide-react";
 
 export default function MealPlan() {
-  const params = useParams();
+  const { category } = useParams();
   const [, setLocation] = useLocation();
-  const category = params.category;
+  const { toast } = useToast();
+  const [patientSession, setPatientSession] = useState<any>(null);
+
+  // Check for patient session (access code login)
+  useEffect(() => {
+    const sessionData = localStorage.getItem('patientSession');
+    if (sessionData) {
+      try {
+        const session = JSON.parse(sessionData);
+        setPatientSession(session);
+      } catch (error) {
+        console.error('Error parsing patient session:', error);
+        localStorage.removeItem('patientSession');
+      }
+    }
+  }, []);
+
+  const { data: patient, isLoading: patientLoading, error } = useQuery<PatientInfo>({
+    queryKey: ["/api/patient/current"],
+    retry: false,
+    enabled: !patientSession,
+  });
+
+  // Handle unauthorized errors
+  useEffect(() => {
+    if (error && isUnauthorizedError(error) && !patientSession) {
+      toast({
+        title: "Unauthorized",
+        description: "You are logged out. Logging in again...",
+        variant: "destructive",
+      });
+      setTimeout(() => {
+        window.location.href = "/api/login";
+      }, 500);
+    }
+  }, [error, toast, patientSession]);
+
+  // Get current patient data - either from API or from session
+  const currentPatient = patientSession?.patient || patient?.patient;
+
+  if (patientLoading && !patientSession) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-medical-green mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando plan de comidas...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentPatient) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="max-w-lg w-full shadow-sm">
+          <CardContent className="p-8 text-center">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              Acceso Requerido
+            </h2>
+            <p className="text-gray-600 mb-6">
+              Necesitas introducir tu código de acceso para ver tus planes de comida.
+            </p>
+            <Button
+              onClick={() => setLocation("/")}
+              className="bg-medical-green text-white hover:bg-green-700"
+            >
+              Introducir Código
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   const goBack = () => {
     setLocation("/dashboard");

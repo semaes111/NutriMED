@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -16,6 +17,21 @@ import PatientLogin from "@/pages/patient-login";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
+  const [patientSession, setPatientSession] = useState<any>(null);
+
+  // Check for patient session
+  useEffect(() => {
+    const sessionData = localStorage.getItem('patientSession');
+    if (sessionData) {
+      try {
+        const session = JSON.parse(sessionData);
+        setPatientSession(session);
+      } catch (error) {
+        console.error('Error parsing patient session:', error);
+        localStorage.removeItem('patientSession');
+      }
+    }
+  }, []);
 
   return (
     <Switch>
@@ -26,14 +42,14 @@ function Router() {
       <Route path="/professional-access" component={ProfessionalAccess} />
       <Route path="/professional" component={ProfessionalDashboard} />
       
-      {/* Authenticated user routes */}
-      {isAuthenticated && (
-        <>
-          <Route path="/dashboard" component={Dashboard} />
-          <Route path="/meal-plan/:category" component={MealPlan} />
-          <Route path="/intermittent-fasting" component={IntermittentFasting} />
-        </>
-      )}
+      {/* Dashboard route - available for both authenticated users and temporary sessions */}
+      <Route path="/dashboard" component={Dashboard} />
+      
+      {/* Meal plan routes - available for both authenticated users and temporary sessions */}
+      <Route path="/meal-plan/:category" component={MealPlan} />
+      
+      {/* Intermittent fasting route - available for both authenticated users and temporary sessions */}
+      <Route path="/intermittent-fasting" component={IntermittentFasting} />
       
       {/* Fallback routes */}
       <Route path="/landing" component={Landing} />
