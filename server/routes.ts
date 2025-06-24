@@ -368,13 +368,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const patientId = parseInt(req.params.patientId);
-      const { weight, notes } = req.body;
+      const { weight, targetWeight, notes } = req.body;
       
-      console.log("Weight registration request:", { patientId, weight, notes });
+      console.log("Weight registration request:", { patientId, weight, targetWeight, notes });
       
       if (!weight || isNaN(parseFloat(weight)) || parseFloat(weight) < 30 || parseFloat(weight) > 300) {
         console.log("Invalid weight:", weight);
         return res.status(400).json({ message: "Peso inválido. Debe estar entre 30 y 300 kg." });
+      }
+
+      // Validate target weight if provided
+      if (targetWeight && (isNaN(parseFloat(targetWeight)) || parseFloat(targetWeight) < 30 || parseFloat(targetWeight) > 300)) {
+        console.log("Invalid target weight:", targetWeight);
+        return res.status(400).json({ message: "Peso objetivo inválido. Debe estar entre 30 y 300 kg." });
       }
 
       // Create weight record with current date
