@@ -421,10 +421,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const patientId = parseInt(req.params.patientId);
+      console.log("Fetching weight history for patient ID:", patientId);
+      
       const weightHistory = await storage.getWeightRecordsByPatient(patientId);
+      console.log("Weight history found:", weightHistory);
       
       res.json(weightHistory);
     } catch (error) {
+      console.error("Error fetching weight history:", error);
       res.status(500).json({ message: "Error interno del servidor" });
     }
   });

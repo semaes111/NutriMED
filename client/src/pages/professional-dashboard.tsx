@@ -197,10 +197,18 @@ export default function ProfessionalDashboard() {
   });
 
   const formatWeightData = (data: any[]) => {
-    console.log('Raw weight data:', data);
+    console.log('Raw weight data received:', data);
+    console.log('Data type:', typeof data, 'Is array:', Array.isArray(data));
     
     if (!data || data.length === 0) {
       console.log('No weight data available');
+      return [];
+    }
+    
+    // Check if this is weight records or patient data
+    const firstItem = data[0];
+    if (firstItem && 'name' in firstItem && 'accessCode' in firstItem) {
+      console.error('ERROR: Received patient data instead of weight records!');
       return [];
     }
     
