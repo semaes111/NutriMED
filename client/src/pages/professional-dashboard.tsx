@@ -120,6 +120,13 @@ export default function ProfessionalDashboard() {
     },
   });
 
+  const targetWeightForm = useForm<TargetWeightForm>({
+    resolver: zodResolver(targetWeightSchema),
+    defaultValues: {
+      targetWeight: 0,
+    },
+  });
+
   const createPatientMutation = useMutation({
     mutationFn: async (data: CreatePatientForm) => {
       console.log("Creating patient with data:", data);
