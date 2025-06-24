@@ -33,7 +33,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [patientSession, setPatientSession] = useState(null);
+  const [patientSession, setPatientSession] = useState<any>(null);
 
   // Check for patient session (access code login)
   useEffect(() => {
@@ -212,7 +212,7 @@ export default function Dashboard() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={handleLogout}
+                  onClick={() => logoutMutation.mutate()}
                   className="text-gray-600 hover:text-gray-800"
                 >
                   <LogOut size={18} />
