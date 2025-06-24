@@ -86,8 +86,13 @@ export default function Dashboard() {
   }, [error, toast]);
 
   const handleLogout = () => {
-    if (confirm("¿Está seguro de que desea cerrar sesión?")) {
-      logoutMutation.mutate();
+    if (patientSession) {
+      localStorage.removeItem('patientSession');
+      setLocation('/');
+    } else {
+      if (confirm("¿Está seguro de que desea cerrar sesión?")) {
+        logoutMutation.mutate();
+      }
     }
   };
 
@@ -144,7 +149,8 @@ export default function Dashboard() {
     );
   }
 
-  const daysUntilExpiry = getDaysUntilExpiry(patient.codeExpiry);
+  // Calculate days until expiry safely
+  const daysUntilExpiry = currentPatient ? getDaysUntilExpiry(currentPatient.codeExpiry) : 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -212,7 +218,7 @@ export default function Dashboard() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => logoutMutation.mutate()}
+                  onClick={handleLogout}
                   className="text-gray-600 hover:text-gray-800"
                 >
                   <LogOut size={18} />
