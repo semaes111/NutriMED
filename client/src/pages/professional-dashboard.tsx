@@ -52,6 +52,7 @@ export default function ProfessionalDashboard() {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showCreatePatient, setShowCreatePatient] = useState(false);
   const [showAddWeight, setShowAddWeight] = useState(false);
+  const [activeTab, setActiveTab] = useState("patients");
   
   // Check if professional is validated (from localStorage)
   const professionalInfo = localStorage.getItem('professionalInfo');
@@ -504,7 +505,10 @@ export default function ProfessionalDashboard() {
                           </Badge>
                           <Button
                             size="sm"
-                            onClick={() => setSelectedPatient(patient)}
+                            onClick={() => {
+                              setSelectedPatient(patient);
+                              setActiveTab("analytics");
+                            }}
                             className="bg-medical-green text-white hover:bg-green-700"
                           >
                             Ver Detalles
@@ -655,8 +659,14 @@ export default function ProfessionalDashboard() {
                   <LineChart className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Selecciona un Paciente</h3>
                   <p className="text-gray-600">
-                    Elige un paciente de la lista para ver sus análisis y seguimiento de peso.
+                    Ve a la pestaña "Gestión de Pacientes" y haz clic en "Ver Detalles" de cualquier paciente para ver sus análisis y seguimiento de peso.
                   </p>
+                  <Button
+                    onClick={() => setActiveTab("patients")}
+                    className="mt-4 bg-medical-green text-white hover:bg-green-700"
+                  >
+                    Ir a Gestión de Pacientes
+                  </Button>
                 </CardContent>
               </Card>
             )}
