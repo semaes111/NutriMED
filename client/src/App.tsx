@@ -12,6 +12,7 @@ import IntermittentFasting from "@/pages/intermittent-fasting";
 import Landing from "@/pages/landing";
 import ProfessionalDashboard from "@/pages/professional-dashboard";
 import ProfessionalAccess from "@/pages/professional-access";
+import PatientLogin from "@/pages/patient-login";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
