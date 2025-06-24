@@ -46,6 +46,7 @@ export interface IStorage {
   getWeightRecordsByPatient(patientId: number): Promise<any[]>;
   addWeightRecord(weightRecord: any): Promise<any>;
   updatePatientAccessCode(patientId: number, accessCode: string, codeExpiry: Date): Promise<void>;
+  updatePatientTargetWeight(patientId: number, targetWeight: number): Promise<void>;
   
   // Diet operations
   getDietLevels(): Promise<DietLevel[]>;
@@ -137,6 +138,13 @@ export class DatabaseStorage implements IStorage {
         accessCode,
         codeExpiry
       })
+      .where(eq(patients.id, patientId));
+  }
+
+  async updatePatientTargetWeight(patientId: number, targetWeight: number): Promise<void> {
+    await db
+      .update(patients)
+      .set({ targetWeight: targetWeight.toString() })
       .where(eq(patients.id, patientId));
   }
 

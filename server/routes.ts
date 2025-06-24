@@ -416,6 +416,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update patient target weight
+  app.patch("/api/professional/patients/:id/target-weight", isAuthenticated, async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      const { targetWeight } = req.body;
+      
+      if (!targetWeight || isNaN(parseFloat(targetWeight)) || parseFloat(targetWeight) < 30 || parseFloat(targetWeight) > 300) {
+        return res.status(400).json({ message: "Peso objetivo inválido (debe ser entre 30 y 300 kg)" });
+      }
+      
+      await storage.updatePatientTargetWeight(patientId, parseFloat(targetWeight));
+      res.json({ 
+        message: "Peso objetivo actualizado exitosamente",
+        patientId,
+        newTargetWeight: parseFloat(targetWeight)
+      });
+    } catch (error) {
+      console.error("Error updating patient target weight:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
   // Get weight history for patient
   app.get("/api/professional/patients/:patientId/weight-history", isAuthenticated, async (req: any, res) => {
     try {

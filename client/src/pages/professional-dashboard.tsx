@@ -45,8 +45,13 @@ const addWeightSchema = z.object({
   notes: z.string().optional(),
 });
 
+const targetWeightSchema = z.object({
+  targetWeight: z.coerce.number().min(30).max(300),
+});
+
 type CreatePatientForm = z.infer<typeof createPatientSchema>;
 type AddWeightForm = z.infer<typeof addWeightSchema>;
+type TargetWeightForm = z.infer<typeof targetWeightSchema>;
 
 export default function ProfessionalDashboard() {
   const { toast } = useToast();
@@ -199,6 +204,35 @@ export default function ProfessionalDashboard() {
     onError: (error: any) => {
       toast({
         title: "Error al actualizar dieta",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateTargetWeightMutation = useMutation({
+    mutationFn: async (data: TargetWeightForm) => {
+      await apiRequest("PATCH", `/api/professional/patients/${selectedPatient?.id}/target-weight`, { 
+        targetWeight: data.targetWeight 
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Peso objetivo actualizado",
+        description: "El objetivo de peso ha sido modificado exitosamente",
+      });
+      // Update the selected patient data
+      setSelectedPatient(prev => prev ? {
+        ...prev, 
+        targetWeight: targetWeightForm.getValues().targetWeight.toString()
+      } : null);
+      // Reset form and refresh data
+      targetWeightForm.reset();
+      queryClient.invalidateQueries({ queryKey: ["/api/professional/patients"] });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error al actualizar peso objetivo",
         description: error.message,
         variant: "destructive",
       });
@@ -686,8 +720,60 @@ export default function ProfessionalDashboard() {
                         <p className="text-xl font-bold text-gray-900">{selectedPatient.initialWeight || 'N/A'} kg</p>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Peso Objetivo</p>
-                        <p className="text-xl font-bold text-medical-green">{selectedPatient.targetWeight || 'N/A'} kg</p>
+                        <p className="text-sm text-gray-600 mb-2">Peso Objetivo</p>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              className="text-xl font-bold text-medical-green hover:bg-green-50 p-2 h-auto"
+                            >
+                              {selectedPatient.targetWeight || 'N/A'} kg
+                              <span className="ml-1 text-xs opacity-70">✏️</span>
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Modificar Peso Objetivo - {selectedPatient.name}</DialogTitle>
+                            </DialogHeader>
+                            <Form {...targetWeightForm}>
+                              <form onSubmit={targetWeightForm.handleSubmit((data) => updateTargetWeightMutation.mutate(data))} className="space-y-4">
+                                <FormField
+                                  control={targetWeightForm.control}
+                                  name="targetWeight"
+                                  render={({ field }) => (
+                                    <FormItem>
+                                      <FormLabel>Nuevo Peso Objetivo (kg)</FormLabel>
+                                      <FormControl>
+                                        <Input 
+                                          {...field} 
+                                          type="number" 
+                                          step="0.1" 
+                                          placeholder={`Actual: ${selectedPatient.targetWeight || 'No definido'} kg`}
+                                        />
+                                      </FormControl>
+                                      <FormDescription>
+                                        Ingrese el nuevo peso objetivo para el paciente
+                                      </FormDescription>
+                                      <FormMessage />
+                                    </FormItem>
+                                  )}
+                                />
+                                <div className="flex justify-end gap-2">
+                                  <DialogTrigger asChild>
+                                    <Button type="button" variant="outline">Cancelar</Button>
+                                  </DialogTrigger>
+                                  <Button 
+                                    type="submit" 
+                                    className="bg-medical-green text-white hover:bg-green-700"
+                                    disabled={updateTargetWeightMutation.isPending}
+                                  >
+                                    {updateTargetWeightMutation.isPending ? 'Guardando...' : 'Guardar'}
+                                  </Button>
+                                </div>
+                              </form>
+                            </Form>
+                          </DialogContent>
+                        </Dialog>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-lg">
                         <p className="text-sm text-gray-600 mb-2">Nivel de Dieta</p>
