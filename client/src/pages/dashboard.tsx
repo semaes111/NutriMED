@@ -34,6 +34,7 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [patientSession, setPatientSession] = useState<any>(null);
+  const [timeRemaining, setTimeRemaining] = useState<string>("");
 
   // Check for patient session (access code login)
   useEffect(() => {
@@ -48,6 +49,60 @@ export default function Dashboard() {
       }
     }
   }, []);
+
+  // Session timer countdown for temporary access
+  useEffect(() => {
+    if (!patientSession?.patient?.codeExpiry) return;
+
+    const updateTimer = () => {
+      const expiryDate = new Date(patientSession.patient.codeExpiry);
+      const now = new Date();
+      const timeDiff = expiryDate.getTime() - now.getTime();
+
+      if (timeDiff <= 0) {
+        setTimeRemaining("Expirado");
+        localStorage.removeItem('patientSession');
+        toast({
+          title: "Sesión Expirada",
+          description: "Su código de acceso ha expirado. Por favor contacte con su médico.",
+          variant: "destructive",
+        });
+        setTimeout(() => setLocation('/'), 3000);
+        return;
+      }
+
+      const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+
+      if (days > 0) {
+        setTimeRemaining(`${days}d ${hours}h ${minutes}m`);
+      } else if (hours > 0) {
+        setTimeRemaining(`${hours}h ${minutes}m`);
+      } else {
+        setTimeRemaining(`${minutes}m`);
+      }
+
+      // Warning notifications
+      if (days === 0 && hours === 0 && minutes <= 30 && minutes > 0) {
+        toast({
+          title: "Acceso Próximo a Expirar",
+          description: `Su código expira en ${minutes} minutos`,
+          variant: "destructive",
+        });
+      } else if (days === 1 && hours <= 1) {
+        toast({
+          title: "Acceso Expira Pronto",
+          description: "Su código expira en menos de 24 horas",
+        });
+      }
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [patientSession, toast, setLocation]);
 
   const { data: patient, isLoading, error } = useQuery<PatientInfo>({
     queryKey: ["/api/patient/current"],
@@ -199,11 +254,26 @@ export default function Dashboard() {
                 </div>
               </div>
               
-              {/* Session Type Badge */}
+              {/* Session Type Badge and Timer */}
               {patientSession && (
-                <Badge variant="secondary" className="text-xs">
-                  Sesión Temporal
-                </Badge>
+                <div className="flex items-center space-x-2">
+                  <Badge variant="secondary" className="text-xs">
+                    Sesión Temporal
+                  </Badge>
+                  {timeRemaining && (
+                    <Badge 
+                      variant={timeRemaining === "Expirado" ? "destructive" : "outline"} 
+                      className={`text-xs ${
+                        timeRemaining.includes('m') && !timeRemaining.includes('h') && !timeRemaining.includes('d')
+                          ? 'border-red-500 text-red-700 bg-red-50' 
+                          : ''
+                      }`}
+                    >
+                      <Clock className="mr-1" size={12} />
+                      {timeRemaining}
+                    </Badge>
+                  )}
+                </div>
               )}
               <div className="flex gap-2">
                 <Button
@@ -421,6 +491,39 @@ export default function Dashboard() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Session Status for Temporary Access */}
+        {patientSession && (
+          <Card className="mb-8 border-l-4 border-l-medical-green">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-medical-green rounded-full flex items-center justify-center">
+                    <Clock className="text-white" size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Acceso Temporal Activo</h3>
+                    <p className="text-sm text-gray-600">
+                      Tiempo restante: <span className="font-medium text-medical-green">{timeRemaining}</span>
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-gray-500">Expira el</div>
+                  <div className="font-medium text-gray-900">
+                    {new Date(patientSession.patient.codeExpiry).toLocaleString('es-ES', {
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Special Programs */}
         <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl border border-purple-200 p-6 mb-8">

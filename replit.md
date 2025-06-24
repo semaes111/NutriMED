@@ -153,6 +153,7 @@ The application follows a monorepo structure with a React frontend, Express.js b
 - June 24, 2025. Added professional dashboard with patient management, unique access codes, nutritional plan assignment, and weight tracking with evolution graphs
 - June 24, 2025. Fixed professional code validation system (PROF2025) with separate access page and database schema corrections
 - June 24, 2025. Implemented patient login system with access codes as main entry point to application
+- June 24, 2025. Added session timer countdown for temporary access with real-time expiration warnings and automatic logout
 
 ## User Preferences
 
