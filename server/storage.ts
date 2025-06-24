@@ -191,13 +191,20 @@ export class DatabaseStorage implements IStorage {
   async addWeightRecord(insertWeightRecord: any): Promise<any> {
     try {
       console.log("Storage: Adding weight record:", insertWeightRecord);
+      
+      // Ensure proper data types and defaults
+      const recordData = {
+        patientId: parseInt(insertWeightRecord.patientId),
+        weight: insertWeightRecord.weight.toString(),
+        notes: insertWeightRecord.notes || null,
+        recordedDate: insertWeightRecord.recordedDate || new Date()
+      };
+      
       const [weightRecord] = await db
         .insert(weightRecords)
-        .values({
-          ...insertWeightRecord,
-          recordedDate: insertWeightRecord.recordedDate || new Date()
-        })
+        .values(recordData)
         .returning();
+      
       console.log("Storage: Weight record created:", weightRecord);
       return weightRecord;
     } catch (error) {

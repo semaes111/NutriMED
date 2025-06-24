@@ -377,18 +377,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Peso inválido. Debe estar entre 30 y 300 kg." });
       }
 
+      // Create weight record with current date
+      const today = new Date();
+      today.setHours(12, 0, 0, 0); // Set to noon to avoid timezone issues
+      
       const weightRecord = await storage.addWeightRecord({
         patientId,
         weight: parseFloat(weight).toFixed(2),
         notes: notes || null,
-        recordedDate: new Date()
+        recordedDate: today
       });
 
       console.log("Weight record created:", weightRecord);
       res.json(weightRecord);
     } catch (error) {
       console.error("Error adding weight record:", error);
-      res.status(500).json({ message: "Error al añadir registro de peso: " + error.message });
+      res.status(500).json({ message: "Error al añadir registro de peso: " + (error as Error).message });
     }
   });
 

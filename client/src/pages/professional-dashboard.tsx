@@ -188,11 +188,33 @@ export default function ProfessionalDashboard() {
   });
 
   const formatWeightData = (data: any[]) => {
-    return data?.map(record => ({
-      date: new Date(record.recordedDate).toLocaleDateString('es-ES'),
-      weight: parseFloat(record.weight),
-      fullDate: record.recordedDate,
-    })) || [];
+    if (!data || data.length === 0) return [];
+    
+    return data
+      .filter(record => record.weight && record.recordedDate) // Filter out invalid records
+      .map(record => {
+        const date = new Date(record.recordedDate);
+        const weight = parseFloat(record.weight);
+        
+        // Validate date and weight
+        if (isNaN(date.getTime()) || isNaN(weight)) {
+          console.warn('Invalid weight record:', record);
+          return null;
+        }
+        
+        return {
+          date: date.toLocaleDateString('es-ES', { 
+            day: '2-digit', 
+            month: '2-digit', 
+            year: 'numeric' 
+          }),
+          weight: weight,
+          fullDate: record.recordedDate,
+          notes: record.notes
+        };
+      })
+      .filter(record => record !== null) // Remove invalid records
+      .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime());
   };
 
   if (isProfessionalLoading) {
@@ -634,9 +656,30 @@ export default function ProfessionalDashboard() {
                         <ResponsiveContainer width="100%" height="100%">
                           <RechartsLineChart data={formatWeightData(weightHistory)}>
                             <CartesianGrid strokeDasharray="3 3" />
-                            <XAxis dataKey="date" />
-                            <YAxis domain={['dataMin - 5', 'dataMax + 5']} />
-                            <Tooltip />
+                            <XAxis 
+                              dataKey="date" 
+                              tick={{ fontSize: 12 }}
+                              angle={-45}
+                              textAnchor="end"
+                              height={80}
+                            />
+                            <YAxis 
+                              domain={['dataMin - 2', 'dataMax + 2']} 
+                              tick={{ fontSize: 12 }}
+                              label={{ value: 'Peso (kg)', angle: -90, position: 'insideLeft' }}
+                            />
+                            <Tooltip 
+                              formatter={(value, name) => [
+                                `${Number(value).toFixed(1)} kg`, 
+                                'Peso'
+                              ]}
+                              labelFormatter={(label) => `Fecha: ${label}`}
+                              contentStyle={{
+                                backgroundColor: 'white',
+                                border: '1px solid #e5e7eb',
+                                borderRadius: '6px'
+                              }}
+                            />
                             <Line 
                               type="monotone" 
                               dataKey="weight" 
