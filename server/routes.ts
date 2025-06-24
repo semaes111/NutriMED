@@ -160,29 +160,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Validate professional access code - no auth required for initial validation
   app.post("/api/professional/validate", async (req, res) => {
     try {
+      console.log("Professional validation request body:", req.body);
       const { accessCode } = req.body;
       
       if (!accessCode) {
+        console.log("No access code provided");
         return res.status(400).json({ message: "Código de acceso requerido" });
       }
 
+      console.log("Looking for professional with code:", accessCode);
       const professional = await storage.getProfessionalByAccessCode(accessCode);
+      console.log("Professional found:", professional);
       
       if (!professional || !professional.isActive) {
+        console.log("Professional not found or inactive");
         return res.status(404).json({ message: "Código profesional no válido" });
       }
       
       res.json({
+        valid: true,
         professional: {
           id: professional.id,
           name: professional.name,
           specialty: professional.specialty,
           licenseNumber: professional.licenseNumber,
+          accessCode: professional.accessCode
         }
       });
     } catch (error) {
-      res.status(400).json({ 
-        message: "Datos de entrada inválidos" 
+      console.error("Error in professional validation:", error);
+      res.status(500).json({ 
+        message: "Error interno del servidor" 
       });
     }
   });
