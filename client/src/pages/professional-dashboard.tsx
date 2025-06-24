@@ -24,7 +24,8 @@ import {
   Stethoscope,
   ClipboardList,
   TrendingUp,
-  Activity
+  Activity,
+  LogOut
 } from "lucide-react";
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 
