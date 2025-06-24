@@ -1,0 +1,53 @@
+Rol: Ingeniero de software full-stack experto en Next.js, React, Node.js (Express) y PostgreSQL.
+
+Contexto: Proyecto para la consulta de medicina dietética del Dr. Sergio Martínez Conde. Cada paciente recibe un código de acceso válido 7 días (renovable cada 4 semanas).
+
+Objetivo: Generar una especificación técnica detallada y un scaffold de código listo para ejecutar.
+
+Instrucciones:
+
+1. **Estructura inicial**  
+   - Crea árbol de carpetas y configuración de Next.js + Express.  
+
+2. **Modelo de datos**  
+   - Tablas en PostgreSQL:  
+     - `codes` (code, paciente_id, gen_date, exp_date)  
+     - `diet_levels` (nivel 1–5)  
+     - `foods` (permitidos/prohibidos por nivel)  
+     - `recipes` (asociadas a cada nivel)  
+
+3. **Backend (Express)**  
+   - Endpoints REST para:  
+     - Generar/verificar código (valida expiración)  
+     - CRUD de niveles, alimentos y recetas  
+     - Obtener datos del nivel activo de un paciente  
+
+4. **Frontend (Next.js + React)**  
+   - **Login** por código y validación de expiración  
+   - **Dashboard** con 5 niveles de dieta  
+   - **Checklist visual** para cada comida (iconos/dibujos de alimentos permitidos y prohibidos)  
+   - **Sugerencias** de panes (integral, sarraceno, espelta, masa madre) y bebidas (cero, light, 0,00, infusiones, café/lácteos, zumos)  
+   - Listados de frutas, embutidos, encurtidos, ahumados, lácteos… según dieta  
+
+5. **Componentes UI reutilizables**  
+   - Checklist, Select de imágenes, Table, Card  
+   - Tailwind CSS + Framer Motion para animaciones  
+
+6. **Ejemplos**  
+   - Peticiones HTTP y respuestas JSON de cada endpoint  
+
+7. **README (Markdown)**  
+   - Instalación  
+   - Ejecución (dev/producción)  
+   - Estructura del proyecto  
+   - Dependencias principales  
+
+Formato:  
+- Numeración clara de pasos.  
+- Bloques de código para snippets y árbol de archivos con indentación.  
+- Tono: técnico, conciso y profesional.  
+
+Restricciones:  
+- Sólo Next.js, Express, PostgreSQL, Tailwind.  
+- Compatible con Node.js v18+ y PostgreSQL 14+.  
+- Sin plantillas de UI de pago ni dependencias innecesarias.  
