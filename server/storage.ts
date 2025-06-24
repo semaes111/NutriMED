@@ -6,6 +6,8 @@ import {
   foodItems,
   intermittentFasting,
   users,
+  professionals,
+  weightRecords,
   type Patient, 
   type InsertPatient,
   type DietLevel,
