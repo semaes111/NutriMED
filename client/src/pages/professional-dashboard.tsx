@@ -690,8 +690,41 @@ export default function ProfessionalDashboard() {
                         <p className="text-xl font-bold text-medical-green">{selectedPatient.targetWeight || 'N/A'} kg</p>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-lg">
-                        <p className="text-sm text-gray-600">Nivel de Dieta</p>
-                        <p className="text-xl font-bold text-blue-600">{selectedPatient.dietLevel}</p>
+                        <p className="text-sm text-gray-600 mb-2">Nivel de Dieta</p>
+                        <Select 
+                          value={selectedPatient.dietLevel?.toString()} 
+                          onValueChange={(value) => {
+                            const newLevel = parseInt(value);
+                            updateDietLevelMutation.mutate({ 
+                              patientId: selectedPatient.id, 
+                              dietLevel: newLevel 
+                            });
+                          }}
+                        >
+                          <SelectTrigger className="w-full bg-white border-2 border-blue-200">
+                            <SelectValue>
+                              <span className="text-xl font-bold text-blue-600">
+                                Nivel {selectedPatient.dietLevel}
+                              </span>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent>
+                            {[1, 2, 3, 4, 5].map((level) => (
+                              <SelectItem key={level} value={level.toString()}>
+                                <div className="flex flex-col">
+                                  <span className="font-semibold">Nivel {level}</span>
+                                  <span className="text-xs text-gray-500">
+                                    {level === 1 && "Dieta básica"}
+                                    {level === 2 && "Dieta intermedia"}
+                                    {level === 3 && "Dieta avanzada"}
+                                    {level === 4 && "Dieta especializada"}
+                                    {level === 5 && "Dieta intensiva"}
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                       <div className="text-center p-4 bg-gray-50 rounded-lg">
                         <p className="text-sm text-gray-600">Registros</p>
