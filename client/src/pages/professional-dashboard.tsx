@@ -152,6 +152,9 @@ export default function ProfessionalDashboard() {
       queryClient.invalidateQueries({ 
         queryKey: ["/api/professional/patients", selectedPatient.id, "weight-history"] 
       });
+      queryClient.invalidateQueries({ 
+        queryKey: ["/api/professional/patients"] 
+      });
       setShowAddWeight(false);
       addWeightForm.reset();
     },
