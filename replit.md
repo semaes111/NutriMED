@@ -156,6 +156,8 @@ The application follows a monorepo structure with a React frontend, Express.js b
 - June 24, 2025. Added session timer countdown for temporary access with real-time expiration warnings and automatic logout
 - June 24, 2025. Fixed weight history graph display - now correctly shows weight records with dates and times, properly generates new access codes on weight registration
 - June 24, 2025. Configured professional logout to redirect to Replit home page (/) for proper session termination
+- June 24, 2025. Added editable target weight system for professionals - clickable interface with modal forms and real-time updates
+- June 24, 2025. Integrated media mañana/mid-morning snack options within breakfast plans for unified meal planning experience
 
 ## User Preferences
 
