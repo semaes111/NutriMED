@@ -55,6 +55,7 @@ export default function ProfessionalDashboard() {
   const [showCreatePatient, setShowCreatePatient] = useState(false);
   const [showAddWeight, setShowAddWeight] = useState(false);
   const [activeTab, setActiveTab] = useState("patients");
+  const [searchTerm, setSearchTerm] = useState("");
   
   // Check if professional is validated (from localStorage)
   const professionalInfo = localStorage.getItem('professionalInfo');
@@ -72,6 +73,12 @@ export default function ProfessionalDashboard() {
     queryKey: ["/api/professional/patients"],
     enabled: isValidated && !!professional,
   });
+
+  // Filter patients based on search term
+  const filteredPatients = patients?.filter((patient: any) =>
+    patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    patient.accessCode.toLowerCase().includes(searchTerm.toLowerCase())
+  ) || [];
 
   // Get diet levels
   const { data: dietLevels } = useQuery({
@@ -560,33 +567,39 @@ export default function ProfessionalDashboard() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    {patients?.map((patient: any) => (
-                      <div key={patient.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-gray-900">{patient.name}</h3>
-                          <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
-                            <span>Edad: {patient.age || 'N/A'} años</span>
-                            <span>Nivel Dieta: {patient.dietLevel}</span>
-                            <span>Código: {patient.accessCode}</span>
+                    {filteredPatients.length === 0 && searchTerm ? (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No se encontraron pacientes que coincidan con "{searchTerm}"</p>
+                      </div>
+                    ) : (
+                      filteredPatients.map((patient: any) => (
+                        <div key={patient.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900">{patient.name}</h3>
+                            <div className="flex items-center gap-4 mt-1 text-sm text-gray-600">
+                              <span>Edad: {patient.age || 'N/A'} años</span>
+                              <span>Nivel Dieta: {patient.dietLevel}</span>
+                              <span>Código: {patient.accessCode}</span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant={patient.isActive ? "default" : "secondary"}>
+                              {patient.isActive ? "Activo" : "Inactivo"}
+                            </Badge>
+                            <Button
+                              size="sm"
+                              onClick={() => {
+                                setSelectedPatient(patient);
+                                setActiveTab("analytics");
+                              }}
+                              className="bg-medical-green text-white hover:bg-green-700"
+                            >
+                              Ver Detalles
+                            </Button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={patient.isActive ? "default" : "secondary"}>
-                            {patient.isActive ? "Activo" : "Inactivo"}
-                          </Badge>
-                          <Button
-                            size="sm"
-                            onClick={() => {
-                              setSelectedPatient(patient);
-                              setActiveTab("analytics");
-                            }}
-                            className="bg-medical-green text-white hover:bg-green-700"
-                          >
-                            Ver Detalles
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                 )}
               </CardContent>
