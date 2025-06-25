@@ -83,7 +83,7 @@ export default function ProfessionalDashboardWorking() {
 
   // Get weight history for selected patient
   const { data: weightHistory, refetch: refetchWeight } = useQuery({
-    queryKey: ["/api/patient/weight-history", selectedPatient?.id],
+    queryKey: ["/api/professional/patients", selectedPatient?.id, "weight-history"],
     enabled: !!selectedPatient?.id,
     retry: false,
   });
@@ -91,15 +91,11 @@ export default function ProfessionalDashboardWorking() {
   // Add weight mutation
   const addWeightMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest(`/api/professional/patients/${selectedPatient.id}/weight`, {
-        method: "POST",
-        body: JSON.stringify({
-          weight: data.weight,
-          notes: data.notes,
-          recordedDate: new Date().toISOString(),
-        }),
+      const response = await apiRequest("POST", `/api/professional/patients/${selectedPatient.id}/weight`, {
+        weight: parseFloat(data.weight),
+        notes: data.notes || "",
       });
-      return response;
+      return response.json();
     },
     onSuccess: (data) => {
       console.log("Weight added successfully:", data);
@@ -108,7 +104,7 @@ export default function ProfessionalDashboardWorking() {
         description: `Peso registrado exitosamente. Nuevo código: ${data.newAccessCode}`,
       });
       queryClient.invalidateQueries({ queryKey: ["/api/professional/patients"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/patient/weight-history", selectedPatient.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/professional/patients", selectedPatient.id, "weight-history"] });
       refetchWeight();
       setShowAddWeight(false);
       addWeightForm.reset();
