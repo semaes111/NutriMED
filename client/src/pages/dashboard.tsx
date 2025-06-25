@@ -540,10 +540,8 @@ export default function Dashboard() {
                                 };
                               });
                             
-                            console.log("Final chart data:", chartData);
-                            console.log("Last point in chart:", chartData[chartData.length - 1]);
-                            console.log("Latest weight from calculation:", weightHistory
-                              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]);
+                            console.log("Patient dashboard - Final chart data:", chartData);
+                            console.log("Patient dashboard - Last point in chart:", chartData[chartData.length - 1]);
                             
                             return chartData;
                           })()}

@@ -286,24 +286,32 @@ export default function ProfessionalDashboardWorking() {
   const formatWeightDataForChart = (data: any[]) => {
     if (!data || !Array.isArray(data) || data.length === 0) return [];
     
-    return data
-      .filter(record => record && record.recordedDate && record.weight)
-      .map((record) => {
-        const date = new Date(record.recordedDate);
-        const weight = parseFloat(record.weight);
-        
-        return {
-          date: date.toLocaleDateString('es-ES', { 
-            day: '2-digit', 
-            month: '2-digit' 
-          }),
-          weight: weight,
-          fullDate: record.recordedDate,
-        };
-      })
-      .filter(record => !isNaN(new Date(record.fullDate).getTime()) && !isNaN(record.weight))
-      .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
-      .slice(-10); // Show last 10 records
+    console.log("Professional chart - Raw data:", data.map(r => ({ id: r.id, weight: r.weight, createdAt: r.createdAt })));
+    
+    const sortedData = data
+      .filter(record => record && record.weight && record.createdAt)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    
+    console.log("Professional chart - Sorted data:", sortedData.map(r => ({ id: r.id, weight: r.weight, createdAt: r.createdAt })));
+    
+    const chartData = sortedData.map((record) => {
+      const weight = parseFloat(record.weight);
+      
+      return {
+        date: new Date(record.createdAt).toLocaleDateString('es-ES', { 
+          day: '2-digit', 
+          month: '2-digit' 
+        }),
+        weight: weight,
+        fullDate: record.createdAt,
+        recordId: record.id
+      };
+    });
+    
+    console.log("Professional chart - Final chart data:", chartData);
+    console.log("Professional chart - Last point:", chartData[chartData.length - 1]);
+    
+    return chartData;
   };
 
   const handleLogout = () => {
@@ -719,7 +727,8 @@ export default function ProfessionalDashboardWorking() {
                             <h4 className="font-medium text-gray-900 mb-3">Registros Recientes</h4>
                             <div className="space-y-2">
                               {weightHistory
-                                .filter(record => record && record.recordedDate && record.weight)
+                                .filter(record => record && record.weight && record.createdAt)
+                                .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
                                 .slice(0, 3)
                                 .map((record: any) => (
                                 <div key={record.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
@@ -730,7 +739,7 @@ export default function ProfessionalDashboardWorking() {
                                     <div>
                                       <p className="font-medium text-gray-900 text-sm">{record.weight} kg</p>
                                       <p className="text-xs text-gray-500">
-                                        {new Date(record.recordedDate).toLocaleDateString('es-ES')} - {new Date(record.recordedDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                        {new Date(record.createdAt).toLocaleDateString('es-ES')} - {new Date(record.createdAt).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                                       </p>
                                     </div>
                                   </div>
