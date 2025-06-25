@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertPatientSchema, insertWeightRecordSchema, insertProfessionalSchema } from "@shared/schema";
 import { z } from "zod";
+import "./types"; // Import session type definitions
 
 const accessCodeSchema = z.object({
   accessCode: z.string().min(6).max(20),
@@ -244,11 +245,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Patient validation successful");
       
-      // Initialize session if it doesn't exist
-      if (!req.session) {
-        req.session = {};
-      }
-      
       // Create patient session for dashboard access
       req.session.patientSession = {
         patient: {
@@ -263,7 +259,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           targetWeight: patient.targetWeight,
           medicalNotes: patient.medicalNotes
         },
-        loginTime: new Date()
+        loginTime: new Date().toISOString()
       };
 
       console.log("Patient session created for dashboard access:", req.session.patientSession);
