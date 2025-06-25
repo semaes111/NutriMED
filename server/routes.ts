@@ -535,6 +535,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create new patient with professional code validation
+  app.post("/api/professional/patients/:code", async (req: any, res) => {
+    try {
+      const accessCode = req.params.code;
+      console.log("Professional create patient request with code:", accessCode);
+      
+      // Validate professional code
+      const professional = await storage.getProfessionalByAccessCode(accessCode);
+      if (!professional || !professional.isActive) {
+        console.log("Invalid professional code:", accessCode);
+        return res.status(401).json({ message: "Código profesional inválido" });
+      }
+
+      // Generate patient access code and set expiry
+      const patientAccessCode = generateAccessCode();
+      const codeExpiry = new Date();
+      codeExpiry.setDate(codeExpiry.getDate() + 30); // 30 days validity
+
+      // Create patient data with proper types
+      const patientData = {
+        name: req.body.name,
+        age: parseInt(req.body.age),
+        height: req.body.height.toString(),
+        initialWeight: req.body.initialWeight.toString(),
+        targetWeight: req.body.targetWeight.toString(),
+        dietLevel: parseInt(req.body.dietLevel),
+        medicalNotes: req.body.medicalNotes || null,
+        accessCode: patientAccessCode,
+        codeExpiry,
+        isActive: true,
+      };
+
+      console.log("Creating patient with data:", patientData);
+      const newPatient = await storage.createPatient(patientData);
+
+      // Add initial weight record
+      await storage.addWeightRecord({
+        patientId: newPatient.id,
+        weight: parseFloat(req.body.initialWeight),
+        notes: "Peso inicial registrado durante la creación del paciente",
+        createdAt: new Date(),
+      });
+
+      res.json({
+        patient: newPatient,
+        accessCode: patientAccessCode,
+        message: "Paciente creado exitosamente",
+      });
+    } catch (error) {
+      console.error("Error creating patient:", error);
+      res.status(400).json({ 
+        message: "Error al crear paciente: " + (error as Error).message 
+      });
+    }
+  });
+
   // Get all patients for professional with code validation
   app.get("/api/professional/patients/:code", async (req: any, res) => {
     try {
