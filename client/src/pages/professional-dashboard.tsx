@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -302,7 +302,10 @@ export default function ProfessionalDashboard() {
     return formatted;
   };
 
-  if (isProfessionalLoading) {
+  // Get current professional data (localStorage or API)
+  const currentProfessional = professionalInfo || professional?.professional;
+
+  if (isProfessionalLoading && !professionalInfo) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -314,7 +317,7 @@ export default function ProfessionalDashboard() {
   }
 
   // Redirect to professional access if not validated
-  if (!isValidated) {
+  if (!isValidated || !currentProfessional) {
     window.location.href = '/professional-access';
     return null;
   }
@@ -379,9 +382,15 @@ export default function ProfessionalDashboard() {
               </div>
             </div>
             <Button
-              onClick={() => window.location.href = "/api/logout"}
+              onClick={() => {
+                if (confirm("¿Está seguro de que desea cerrar sesión?")) {
+                  localStorage.removeItem('professionalInfo');
+                  setProfessionalInfo(null);
+                  window.location.href = '/';
+                }
+              }}
               variant="outline"
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="text-gray-600 border-gray-300 hover:bg-gray-50"
             >
               <LogOut size={16} className="mr-2" />
               Cerrar Sesión
