@@ -75,9 +75,13 @@ export default function ProfessionalDashboard() {
       } catch (error) {
         console.error('Error parsing professional info:', error);
         localStorage.removeItem('professionalInfo');
+        setLocation('/professional-access');
       }
+    } else {
+      console.log('No professional info found, redirecting to access page');
+      setLocation('/professional-access');
     }
-  }, []);
+  }, [setLocation]);
   
   const isValidated = !!professionalInfo;
 

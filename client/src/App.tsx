@@ -42,6 +42,7 @@ function Router() {
       {/* Professional access routes */}
       <Route path="/professional-access" component={ProfessionalAccess} />
       <Route path="/professional" component={ProfessionalDashboard} />
+      <Route path="/professional-dashboard" component={ProfessionalDashboard} />
       
       {/* Dashboard route - available for both authenticated users and temporary sessions */}
       <Route path="/dashboard" component={Dashboard} />
