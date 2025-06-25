@@ -50,6 +50,14 @@ const changeDietSchema = z.object({
   dietLevel: z.string().min(1, "El nivel de dieta es requerido"),
 });
 
+const targetWeightSchema = z.object({
+  targetWeight: z.string().min(1, "Peso objetivo requerido")
+    .refine((val) => {
+      const num = parseFloat(val);
+      return !isNaN(num) && num >= 30 && num <= 300;
+    }, "Peso debe estar entre 30 y 300 kg")
+});
+
 export default function ProfessionalDashboardWorking() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -61,6 +69,7 @@ export default function ProfessionalDashboardWorking() {
   const [showAddWeight, setShowAddWeight] = useState(false);
   const [showPatientDetail, setShowPatientDetail] = useState(false);
   const [showChangeDiet, setShowChangeDiet] = useState(false);
+  const [showTargetWeightModal, setShowTargetWeightModal] = useState(false);
 
   useEffect(() => {
     console.log('Working Professional Dashboard useEffect triggered');
@@ -193,6 +202,47 @@ export default function ProfessionalDashboardWorking() {
 
   const onSubmitDietChange = (data: any) => {
     changeDietMutation.mutate(data);
+  };
+
+  // Target weight mutation
+  const targetWeightMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PATCH", `/api/professional/patients/${selectedPatient.id}/target-weight`, {
+        targetWeight: parseFloat(data.targetWeight)
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      console.log("Target weight updated successfully:", data);
+      toast({
+        title: "Peso objetivo actualizado",
+        description: "El objetivo ha sido modificado exitosamente",
+      });
+      setShowTargetWeightModal(false);
+      targetWeightForm.reset();
+      queryClient.invalidateQueries({ queryKey: ["/api/professional/patients"] });
+      setSelectedPatient({ ...selectedPatient, targetWeight: data.newTargetWeight });
+    },
+    onError: (error: any) => {
+      console.error("Error updating target weight:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Error al actualizar peso objetivo",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Form for target weight
+  const targetWeightForm = useForm({
+    resolver: zodResolver(targetWeightSchema),
+    defaultValues: {
+      targetWeight: "",
+    },
+  });
+
+  const onSubmitTargetWeight = (data: any) => {
+    targetWeightMutation.mutate(data);
   };
 
   // Format weight data for chart
@@ -456,9 +506,17 @@ export default function ProfessionalDashboardWorking() {
                         <p className="text-2xl font-bold text-green-700">{selectedPatient.initialWeight} kg</p>
                       </div>
                       
-                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 hover:bg-blue-100 transition-colors cursor-pointer"
+                           onClick={() => {
+                             targetWeightForm.setValue("targetWeight", selectedPatient.targetWeight?.toString() || "");
+                             setShowTargetWeightModal(true);
+                           }}>
                         <h4 className="font-medium text-blue-800 mb-1">Peso Objetivo</h4>
-                        <p className="text-2xl font-bold text-blue-700">{selectedPatient.targetWeight} kg</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-2xl font-bold text-blue-700">{selectedPatient.targetWeight} kg</p>
+                          <Edit className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <p className="text-xs text-blue-600 mt-1">Click para modificar</p>
                       </div>
                       
                       <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
@@ -519,9 +577,17 @@ export default function ProfessionalDashboardWorking() {
                     <p className="text-lg font-bold text-green-700">{selectedPatient.initialWeight} kg</p>
                   </div>
                   
-                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                  <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 hover:bg-purple-100 transition-colors cursor-pointer"
+                       onClick={() => {
+                         targetWeightForm.setValue("targetWeight", selectedPatient.targetWeight?.toString() || "");
+                         setShowTargetWeightModal(true);
+                       }}>
                     <h4 className="font-medium text-purple-800 mb-1">Peso Objetivo</h4>
-                    <p className="text-lg font-bold text-purple-700">{selectedPatient.targetWeight} kg</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-lg font-bold text-purple-700">{selectedPatient.targetWeight} kg</p>
+                      <Edit className="h-4 w-4 text-purple-500" />
+                    </div>
+                    <p className="text-xs text-purple-600 mt-1">Click para modificar</p>
                   </div>
                   
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
@@ -861,6 +927,93 @@ export default function ProfessionalDashboardWorking() {
                       <>
                         <Settings className="mr-2" size={16} />
                         Cambiar Nivel
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Target Weight Modal */}
+        <Dialog open={showTargetWeightModal} onOpenChange={setShowTargetWeightModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <Edit className="text-blue-600" size={24} />
+                <span>Modificar Peso Objetivo</span>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <Form {...targetWeightForm}>
+              <form onSubmit={targetWeightForm.handleSubmit(onSubmitTargetWeight)} className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <h4 className="font-medium text-blue-800 mb-2">Paciente: {selectedPatient?.name}</h4>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-blue-600">Peso inicial:</span>
+                      <p className="font-bold text-blue-800">{selectedPatient?.initialWeight} kg</p>
+                    </div>
+                    <div>
+                      <span className="text-blue-600">Objetivo actual:</span>
+                      <p className="font-bold text-blue-800">{selectedPatient?.targetWeight} kg</p>
+                    </div>
+                  </div>
+                </div>
+
+                <FormField
+                  control={targetWeightForm.control}
+                  name="targetWeight"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nuevo Peso Objetivo (kg)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          step="0.1" 
+                          placeholder="Ej: 65.0"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="flex items-center space-x-2 text-green-800">
+                    <Edit className="text-green-600" size={16} />
+                    <span className="font-medium">Actualización de Meta</span>
+                  </div>
+                  <p className="text-sm text-green-700 mt-1">
+                    El nuevo peso objetivo se aplicará inmediatamente y estará disponible en el panel del paciente.
+                  </p>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowTargetWeightModal(false)}
+                    disabled={targetWeightMutation.isPending}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={targetWeightMutation.isPending}
+                    className="bg-blue-600 text-white hover:bg-blue-700"
+                  >
+                    {targetWeightMutation.isPending ? (
+                      <>
+                        <RefreshCw className="animate-spin mr-2" size={16} />
+                        Actualizando...
+                      </>
+                    ) : (
+                      <>
+                        <Edit className="mr-2" size={16} />
+                        Actualizar Objetivo
                       </>
                     )}
                   </Button>
