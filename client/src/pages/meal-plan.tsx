@@ -145,18 +145,18 @@ export default function MealPlan() {
   // Static data based on the documents - in a real app this would come from the API
   const breakfastData = {
     beverages: [
-      "Leche entera/semidesnatada/desnatada",
-      "Leche sin lactosa",
-      "Bebida vegetal (soja, almendras, quinoa, avena)",
-      "Café, tés, infusiones",
-      "Zumos (pomelo, limón, tomate)"
+      "🥛 Leche entera/semidesnatada/desnatada",
+      "🥛 Leche sin lactosa",
+      "🌱 Bebida vegetal (soja, almendras, quinoa, avena)",
+      "☕ Café, tés, infusiones",
+      "🍊 Zumos (pomelo, limón, tomate)"
     ],
     allowedBreads: [
-      "Integral 100%",
-      "Trigo sarraceno",
-      "Espelta",
-      "Centeno integral",
-      "Chía y linaza"
+      "🍞 Integral 100%",
+      "🌾 Trigo sarraceno",
+      "🌾 Espelta",
+      "🍞 Centeno integral",
+      "🌿 Chía y linaza"
     ],
     option1: {
       proteins: [
