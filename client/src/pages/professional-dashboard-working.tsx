@@ -364,10 +364,10 @@ export default function ProfessionalDashboardWorking() {
   };
 
   // Filter patients based on search term
-  const filteredPatients = patients?.filter((patient: any) =>
+  const filteredPatients = (patients || []).filter((patient: any) =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.accessCode.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  );
 
   if (!professionalInfo) {
     return (
