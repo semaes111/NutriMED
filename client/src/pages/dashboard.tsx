@@ -351,7 +351,14 @@ export default function Dashboard() {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Tu Nivel Dietético Actual</h2>
           <Card className="shadow-sm border border-gray-200">
-            <CardContent className="p-6">
+            <CardContent className={`p-6 ${
+              currentPatient.dietLevel === 1 ? 'bg-emerald-50/70' :
+              currentPatient.dietLevel === 2 ? 'bg-blue-50/70' :
+              currentPatient.dietLevel === 3 ? 'bg-purple-50/70' :
+              currentPatient.dietLevel === 4 ? 'bg-orange-50/70' :
+              currentPatient.dietLevel === 5 ? 'bg-red-50/70' :
+              'bg-gray-50/70'
+            }`}>
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-4">
                   <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
