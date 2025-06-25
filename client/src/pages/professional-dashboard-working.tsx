@@ -100,6 +100,14 @@ export default function ProfessionalDashboardWorking() {
   // Get weight history for selected patient
   const { data: weightHistory, refetch: refetchWeight } = useQuery({
     queryKey: ["/api/professional/patients", selectedPatient?.id, "weight-history"],
+    queryFn: async () => {
+      if (!selectedPatient?.id) return [];
+      console.log("Fetching weight history for patient:", selectedPatient.id);
+      const response = await apiRequest("GET", `/api/professional/patients/${selectedPatient.id}/weight-history`);
+      const data = await response.json();
+      console.log("Weight history received:", data);
+      return data;
+    },
     enabled: !!selectedPatient?.id,
     retry: false,
   });
@@ -191,17 +199,33 @@ export default function ProfessionalDashboardWorking() {
 
   // Format weight data for chart
   const formatWeightDataForChart = (data: any[]) => {
-    if (!data || data.length === 0) return [];
+    console.log("Raw data for chart formatting:", data);
+    if (!data || !Array.isArray(data) || data.length === 0) return [];
     
     return data
-      .map((record) => ({
-        date: new Date(record.recordedDate).toLocaleDateString('es-ES', { 
-          day: '2-digit', 
-          month: '2-digit' 
-        }),
-        weight: parseFloat(record.weight),
-        fullDate: record.recordedDate,
-      }))
+      .filter(record => record && record.recordedDate && record.weight)
+      .map((record) => {
+        const date = new Date(record.recordedDate);
+        const weight = parseFloat(record.weight);
+        
+        console.log("Processing record:", {
+          original: record,
+          parsedDate: date,
+          parsedWeight: weight,
+          isValidDate: !isNaN(date.getTime()),
+          isValidWeight: !isNaN(weight)
+        });
+        
+        return {
+          date: date.toLocaleDateString('es-ES', { 
+            day: '2-digit', 
+            month: '2-digit' 
+          }),
+          weight: weight,
+          fullDate: record.recordedDate,
+        };
+      })
+      .filter(record => !isNaN(new Date(record.fullDate).getTime()) && !isNaN(record.weight))
       .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
       .slice(-10); // Show last 10 records
   };
@@ -556,53 +580,62 @@ export default function ProfessionalDashboardWorking() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
-                      {weightHistory && weightHistory.length > 0 ? (
+                      {weightHistory && Array.isArray(weightHistory) && weightHistory.length > 0 ? (
                         <div className="space-y-6">
                           {/* Chart */}
                           <div className="h-64">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <LineChart data={formatWeightDataForChart(weightHistory)}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis 
-                                  dataKey="date" 
-                                  tick={{ fontSize: 12 }}
-                                  angle={-45}
-                                  textAnchor="end"
-                                  height={60}
-                                />
-                                <YAxis 
-                                  domain={['dataMin - 2', 'dataMax + 2']} 
-                                  tick={{ fontSize: 12 }}
-                                  label={{ value: 'Peso (kg)', angle: -90, position: 'insideLeft' }}
-                                />
-                                <Tooltip 
-                                  formatter={(value, name) => [
-                                    `${Number(value).toFixed(1)} kg`, 
-                                    'Peso'
-                                  ]}
-                                  labelFormatter={(label) => `Fecha: ${label}`}
-                                  contentStyle={{
-                                    backgroundColor: 'white',
-                                    border: '1px solid #e5e7eb',
-                                    borderRadius: '6px'
-                                  }}
-                                />
-                                <Line 
-                                  type="monotone" 
-                                  dataKey="weight" 
-                                  stroke="#10b981" 
-                                  strokeWidth={3}
-                                  dot={{ fill: '#10b981', strokeWidth: 2, r: 6 }}
-                                />
-                              </LineChart>
-                            </ResponsiveContainer>
+                            {(() => {
+                              const chartData = formatWeightDataForChart(weightHistory);
+                              console.log("Chart data for rendering:", chartData);
+                              return (
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <LineChart data={chartData}>
+                                    <CartesianGrid strokeDasharray="3 3" />
+                                    <XAxis 
+                                      dataKey="date" 
+                                      tick={{ fontSize: 12 }}
+                                      angle={-45}
+                                      textAnchor="end"
+                                      height={60}
+                                    />
+                                    <YAxis 
+                                      domain={['dataMin - 2', 'dataMax + 2']} 
+                                      tick={{ fontSize: 12 }}
+                                      label={{ value: 'Peso (kg)', angle: -90, position: 'insideLeft' }}
+                                    />
+                                    <Tooltip 
+                                      formatter={(value, name) => [
+                                        `${Number(value).toFixed(1)} kg`, 
+                                        'Peso'
+                                      ]}
+                                      labelFormatter={(label) => `Fecha: ${label}`}
+                                      contentStyle={{
+                                        backgroundColor: 'white',
+                                        border: '1px solid #e5e7eb',
+                                        borderRadius: '6px'
+                                      }}
+                                    />
+                                    <Line 
+                                      type="monotone" 
+                                      dataKey="weight" 
+                                      stroke="#10b981" 
+                                      strokeWidth={3}
+                                      dot={{ fill: '#10b981', strokeWidth: 2, r: 6 }}
+                                    />
+                                  </LineChart>
+                                </ResponsiveContainer>
+                              );
+                            })()}
                           </div>
                           
                           {/* Recent records list */}
                           <div>
                             <h4 className="font-medium text-gray-900 mb-3">Registros Recientes</h4>
                             <div className="space-y-2">
-                              {weightHistory.slice(0, 3).map((record: any) => (
+                              {weightHistory
+                                .filter(record => record && record.recordedDate && record.weight)
+                                .slice(0, 3)
+                                .map((record: any) => (
                                 <div key={record.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
                                   <div className="flex items-center space-x-3">
                                     <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
@@ -628,13 +661,26 @@ export default function ProfessionalDashboardWorking() {
                       ) : (
                         <div className="text-center py-6">
                           <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                          <p className="text-gray-600">No hay registros de peso</p>
-                          <Button
-                            onClick={() => setShowAddWeight(true)}
-                            className="mt-3 bg-green-600 text-white hover:bg-green-700"
-                          >
-                            Registrar Primer Peso
-                          </Button>
+                          <p className="text-gray-600">
+                            {weightHistory === undefined ? "Cargando registros de peso..." : "No hay registros de peso"}
+                          </p>
+                          {weightHistory !== undefined && (
+                            <Button
+                              onClick={() => setShowAddWeight(true)}
+                              className="mt-3 bg-green-600 text-white hover:bg-green-700"
+                            >
+                              Registrar Primer Peso
+                            </Button>
+                          )}
+                          {weightHistory !== undefined && (
+                            <div className="mt-4 text-xs text-gray-500 bg-gray-100 p-2 rounded">
+                              <p>Debug info:</p>
+                              <p>weightHistory type: {typeof weightHistory}</p>
+                              <p>Is array: {Array.isArray(weightHistory).toString()}</p>
+                              <p>Length: {Array.isArray(weightHistory) ? weightHistory.length : 'N/A'}</p>
+                              <p>First item: {JSON.stringify(weightHistory?.[0])}</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </CardContent>
