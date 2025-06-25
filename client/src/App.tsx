@@ -13,7 +13,6 @@ import IntermittentFasting from "@/pages/intermittent-fasting";
 import MoodTrackerPage from "@/pages/mood-tracker";
 import Landing from "@/pages/landing";
 import ProfessionalDashboard from "@/pages/professional-dashboard";
-import ProfessionalDashboardSimple from "@/pages/professional-dashboard-simple";
 import ProfessionalAccess from "@/pages/professional-access";
 import PatientLogin from "@/pages/patient-login";
 
@@ -43,7 +42,7 @@ function Router() {
       {/* Professional access routes */}
       <Route path="/professional-access" component={ProfessionalAccess} />
       <Route path="/professional" component={ProfessionalDashboard} />
-      <Route path="/professional-dashboard" component={ProfessionalDashboardSimple} />
+      <Route path="/professional-dashboard" component={ProfessionalDashboard} />
       
       {/* Dashboard route - available for both authenticated users and temporary sessions */}
       <Route path="/dashboard" component={Dashboard} />
