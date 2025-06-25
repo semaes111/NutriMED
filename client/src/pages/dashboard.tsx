@@ -354,7 +354,14 @@ export default function Dashboard() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 bg-medical-blue rounded-full flex items-center justify-center">
+                  <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                    currentPatient.dietLevel === 1 ? 'bg-emerald-500/80' :
+                    currentPatient.dietLevel === 2 ? 'bg-blue-500/80' :
+                    currentPatient.dietLevel === 3 ? 'bg-purple-500/80' :
+                    currentPatient.dietLevel === 4 ? 'bg-orange-500/80' :
+                    currentPatient.dietLevel === 5 ? 'bg-red-500/80' :
+                    'bg-gray-500/80'
+                  }`}>
                     <span className="text-white font-bold text-xl">{currentPatient.dietLevel}</span>
                   </div>
                   <div>
