@@ -341,162 +341,193 @@ export default function Dashboard() {
           </Card>
         </div>
 
-        {/* Weight Tracking Chart */}
-        {weightHistory && weightHistory.length > 0 && (
-          <Card className="mb-8">
+        {/* Weight Tracking Chart - Complete Implementation */}
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Seguimiento del Peso</h2>
+          <Card className="shadow-sm border border-gray-200">
             <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                  <TrendingUp size={20} className="text-medical-green" />
-                  Evolución del Peso
-                </h3>
-                <div className="flex items-center gap-4">
-                  {(() => {
-                    const sortedHistory = weightHistory.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-                    const initialWeight = parseFloat(currentPatient.initialWeight);
-                    const latestWeight = parseFloat(sortedHistory[sortedHistory.length - 1]?.weight || currentPatient.initialWeight);
-                    const weightDiff = latestWeight - initialWeight;
-                    const isLoss = weightDiff < 0;
-                    
-                    return (
-                      <div className="flex items-center gap-2">
-                        <Badge 
-                          variant="secondary" 
-                          className={`${isLoss ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
-                        >
-                          {isLoss ? '↓' : '↑'} {Math.abs(weightDiff).toFixed(1)} kg
-                        </Badge>
-                        <Badge variant="secondary">
-                          {weightHistory.length} registros
-                        </Badge>
-                      </div>
-                    );
-                  })()}
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-3">
+                  <TrendingUp className="text-medical-blue" size={24} />
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">Evolución del Peso</h3>
+                    <p className="text-sm text-medical-gray">Progreso hacia tu objetivo de salud</p>
+                  </div>
                 </div>
+                {weightHistory && weightHistory.length > 0 && (
+                  <div className="text-right">
+                    <div className="text-sm text-gray-500">Total de registros</div>
+                    <div className="font-bold text-medical-blue">{weightHistory.length}</div>
+                  </div>
+                )}
               </div>
-              
-              {/* Weight Summary Stats */}
-              <div className="grid grid-cols-3 gap-4 mb-6">
-                <div className="text-center p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Peso Inicial</p>
-                  <p className="text-lg font-bold text-blue-600">{currentPatient.initialWeight} kg</p>
+
+              {/* Weight Summary Cards */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-blue-600">Peso Inicial</span>
+                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                      <span className="text-blue-600 text-xs font-bold">I</span>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-800">{currentPatient.initialWeight}</p>
+                  <p className="text-xs text-blue-600">kg</p>
                 </div>
-                <div className="text-center p-3 bg-gray-50 rounded-lg">
-                  <p className="text-sm text-gray-600">Peso Actual</p>
-                  <p className="text-lg font-bold text-gray-900">
-                    {weightHistory.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.weight || currentPatient.initialWeight} kg
+
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-green-600">Peso Actual</span>
+                    <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                      <span className="text-green-600 text-xs font-bold">A</span>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-green-800">
+                    {weightHistory && weightHistory.length > 0 
+                      ? parseFloat(weightHistory.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.weight || currentPatient.initialWeight).toFixed(1)
+                      : parseFloat(currentPatient.initialWeight).toFixed(1)
+                    }
                   </p>
+                  <p className="text-xs text-green-600">kg</p>
                 </div>
-                <div className="text-center p-3 bg-medical-green/10 rounded-lg">
-                  <p className="text-sm text-gray-600">Objetivo</p>
-                  <p className="text-lg font-bold text-medical-green">{currentPatient.targetWeight} kg</p>
+
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-purple-600">Peso Objetivo</span>
+                    <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                      <span className="text-purple-600 text-xs font-bold">O</span>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-purple-800">{currentPatient.targetWeight}</p>
+                  <p className="text-xs text-purple-600">kg</p>
+                </div>
+
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-orange-600">Diferencia Total</span>
+                    <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                      <span className="text-orange-600 text-xs font-bold">Δ</span>
+                    </div>
+                  </div>
+                  <p className="text-2xl font-bold text-orange-800">
+                    {weightHistory && weightHistory.length > 0 
+                      ? (parseFloat(currentPatient.initialWeight) - parseFloat(weightHistory.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.weight || currentPatient.initialWeight)).toFixed(1)
+                      : '0.0'
+                    }
+                  </p>
+                  <p className="text-xs text-orange-600">kg perdidos</p>
                 </div>
               </div>
 
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={(() => {
-                    const sortedHistory = weightHistory.sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-                    const initialWeight = parseFloat(currentPatient.initialWeight);
-                    
-                    return sortedHistory.map((record: any, index: number) => {
-                      const currentWeight = parseFloat(record.weight);
-                      const prevWeight = index > 0 ? parseFloat(sortedHistory[index - 1].weight) : initialWeight;
-                      const weightChange = currentWeight - prevWeight;
-                      const isGain = weightChange > 0;
-                      
-                      return {
-                        date: `${new Date(record.createdAt).toLocaleDateString('es-ES', { 
-                          day: '2-digit', 
-                          month: '2-digit' 
-                        })} (${new Date(record.createdAt).toLocaleTimeString('es-ES', { 
-                          hour: '2-digit', 
-                          minute: '2-digit' 
-                        })})`,
-                        weight: currentWeight,
-                        fullDate: record.createdAt,
-                        index: index + 1,
-                        change: weightChange,
-                        isGain: isGain,
-                        changeFromInitial: currentWeight - initialWeight
-                      };
-                    });
-                  })()}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      dataKey="date" 
-                      angle={-45}
-                      textAnchor="end"
-                      height={80}
-                      fontSize={12}
-                    />
-                    <YAxis domain={['dataMin - 2', 'dataMax + 2']} />
-                    <Tooltip 
-                      content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload;
-                          const changeColor = data.change >= 0 ? '#ef4444' : '#10b981';
-                          const changeIcon = data.change >= 0 ? '↑' : '↓';
+              {/* Weight Chart or Empty State */}
+              {weightHistory && weightHistory.length > 0 ? (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="h-80">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart 
+                        data={(() => {
+                          console.log('Raw weight history:', weightHistory);
+                          console.log('Data type:', typeof weightHistory, 'Is array:', Array.isArray(weightHistory));
                           
-                          return (
-                            <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-                              <p className="font-semibold">{label}</p>
-                              <p className="text-gray-700">Peso: {data.weight} kg</p>
-                              {data.index > 1 && (
-                                <p style={{ color: changeColor }} className="font-medium">
-                                  {changeIcon} {Math.abs(data.change).toFixed(1)} kg vs anterior
-                                </p>
-                              )}
-                              <p className={`font-medium ${data.changeFromInitial >= 0 ? 'text-red-600' : 'text-green-600'}`}>
-                                {data.changeFromInitial >= 0 ? '↑' : '↓'} {Math.abs(data.changeFromInitial).toFixed(1)} kg desde inicio
-                              </p>
-                            </div>
+                          if (!Array.isArray(weightHistory)) return [];
+                          
+                          const sortedHistory = [...weightHistory].sort((a: any, b: any) => 
+                            new Date(a.createdAt || a.recordedDate).getTime() - new Date(b.createdAt || b.recordedDate).getTime()
                           );
+                          
+                          return sortedHistory.map((record: any, index: number) => {
+                            const recordDate = new Date(record.createdAt || record.recordedDate);
+                            const formattedRecord = {
+                              date: `${recordDate.getDate()}/${recordDate.getMonth() + 1} (${recordDate.getHours().toString().padStart(2, '0')}:${recordDate.getMinutes().toString().padStart(2, '0')})`,
+                              weight: parseFloat(record.weight),
+                              fullDate: record.createdAt || record.recordedDate,
+                              notes: record.notes
+                            };
+                            console.log('Formatted record:', formattedRecord);
+                            return formattedRecord;
+                          });
+                        })()}
+                        margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                        <XAxis 
+                          dataKey="date" 
+                          angle={-45}
+                          textAnchor="end"
+                          height={80}
+                          tick={{ fontSize: 11 }}
+                          tickLine={false}
+                          axisLine={false}
+                        />
+                        <YAxis 
+                          domain={['dataMin - 3', 'dataMax + 3']}
+                          tick={{ fontSize: 12 }}
+                          tickLine={false}
+                          axisLine={false}
+                          label={{ value: 'Peso (kg)', angle: -90, position: 'insideLeft' }}
+                        />
+                        <Tooltip 
+                          contentStyle={{
+                            backgroundColor: 'white',
+                            border: '1px solid #e5e7eb',
+                            borderRadius: '8px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                          }}
+                          formatter={(value: any) => [`${value} kg`, 'Peso']}
+                          labelFormatter={(label: string) => `Fecha: ${label}`}
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="weight" 
+                          stroke="#3b82ff" 
+                          strokeWidth={3}
+                          dot={{ fill: '#3b82ff', strokeWidth: 2, r: 5 }}
+                          activeDot={{ r: 7, fill: '#1d4ed8', strokeWidth: 2 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  {/* Additional Progress Indicators */}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex justify-between items-center text-sm">
+                      <div className="flex items-center space-x-4">
+                        <span className="text-gray-600">
+                          <strong>Objetivo restante:</strong> 
+                          {weightHistory && weightHistory.length > 0 
+                            ? ` ${Math.abs(parseFloat(weightHistory.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.weight || currentPatient.initialWeight) - parseFloat(currentPatient.targetWeight)).toFixed(1)} kg`
+                            : ` ${Math.abs(parseFloat(currentPatient.initialWeight) - parseFloat(currentPatient.targetWeight)).toFixed(1)} kg`
+                          }
+                        </span>
+                        <span className="text-gray-600">
+                          <strong>Progreso:</strong> 
+                          {weightHistory && weightHistory.length > 0 
+                            ? ` ${Math.round(((parseFloat(currentPatient.initialWeight) - parseFloat(weightHistory.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.weight || currentPatient.initialWeight)) / (parseFloat(currentPatient.initialWeight) - parseFloat(currentPatient.targetWeight))) * 100)}%`
+                            : ' 0%'
+                          }
+                        </span>
+                      </div>
+                      <div className="text-gray-500">
+                        Última actualización: {weightHistory && weightHistory.length > 0 
+                          ? new Date(weightHistory.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]?.createdAt).toLocaleDateString('es-ES')
+                          : 'Sin registros'
                         }
-                        return null;
-                      }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="weight" 
-                      stroke="#6366f1" 
-                      strokeWidth={3}
-                      dot={(props: any) => {
-                        const { cx, cy, payload } = props;
-                        if (!payload) return null;
-                        
-                        const color = payload.change >= 0 ? '#ef4444' : '#10b981';
-                        return (
-                          <circle 
-                            cx={cx} 
-                            cy={cy} 
-                            r={6} 
-                            fill={color} 
-                            stroke={color} 
-                            strokeWidth={2}
-                          />
-                        );
-                      }}
-                      activeDot={{ r: 8, stroke: '#6366f1', strokeWidth: 2 }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-              
-              {/* Legend */}
-              <div className="flex items-center justify-center gap-6 mt-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                  <span className="text-gray-600">Ganancia de peso</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span className="text-gray-600">Pérdida de peso</span>
+              ) : (
+                <div className="h-64 flex flex-col items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
+                  <TrendingUp className="text-gray-400 mb-4" size={48} />
+                  <h4 className="text-lg font-medium text-gray-600 mb-2">No hay registros de peso</h4>
+                  <p className="text-gray-500 text-center max-w-md">
+                    Los registros de peso aparecerán aquí cuando su profesional de la salud los añada al sistema.
+                  </p>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
-        )}
+        </div>
 
         {/* Meal Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
