@@ -134,15 +134,48 @@ export default function ProfessionalDashboardWorking() {
     },
     onSuccess: (data) => {
       console.log("Weight added successfully:", data);
+      
+      // Show enhanced success notification with prominent code display
       toast({
-        title: "Peso registrado",
-        description: `Peso registrado exitosamente. Nuevo código: ${data.newAccessCode}`,
+        title: "✅ Peso Registrado Exitosamente",
+        description: (
+          <div className="space-y-3">
+            <p className="text-sm">Peso de {selectedPatient?.name} actualizado correctamente.</p>
+            <div className="bg-green-100 border border-green-300 rounded-lg p-3">
+              <p className="text-xs font-medium text-green-800 mb-1">🆕 NUEVO CÓDIGO DE ACCESO:</p>
+              <div className="bg-white border-2 border-green-400 rounded p-2 flex items-center justify-between">
+                <code className="text-lg font-bold text-green-900 tracking-wider">{data.newAccessCode}</code>
+                <button 
+                  onClick={() => navigator.clipboard.writeText(data.newAccessCode)}
+                  className="ml-2 text-green-700 hover:text-green-900"
+                  title="Copiar código"
+                >
+                  📋
+                </button>
+              </div>
+              <p className="text-xs text-green-700 mt-1">
+                ⚠️ El código anterior ha sido invalidado
+              </p>
+            </div>
+          </div>
+        ),
+        variant: "default",
+        duration: 10000, // Show for 10 seconds
       });
+      
       queryClient.invalidateQueries({ queryKey: ["/api/professional/patients"] });
       queryClient.invalidateQueries({ queryKey: ["/api/professional/patients", selectedPatient.id, "weight-history"] });
       refetchWeight();
       setShowAddWeight(false);
       addWeightForm.reset();
+      
+      // Update selected patient with new access code for immediate display
+      if (selectedPatient) {
+        setSelectedPatient({
+          ...selectedPatient,
+          accessCode: data.newAccessCode
+        });
+      }
     },
     onError: (error: any) => {
       console.error("Error adding weight:", error);
