@@ -115,6 +115,19 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [patientSession, toast, setLocation]);
 
+  // Fetch patient's weight history
+  const { data: weightHistory } = useQuery({
+    queryKey: ["/api/patient/weight-history", patientSession?.patient?.id],
+    queryFn: async () => {
+      if (!patientSession?.patient?.id) return [];
+      const response = await apiRequest("GET", `/api/patient/${patientSession.patient.id}/weight-history`);
+      const data = await response.json();
+      return data || [];
+    },
+    enabled: !!patientSession?.patient?.id,
+    retry: false,
+  });
+
   const { data: patient, isLoading, error } = useQuery<PatientInfo>({
     queryKey: ["/api/patient/current"],
     retry: false,
@@ -123,11 +136,6 @@ export default function Dashboard() {
 
   // Get current patient data - either from API or from session
   const currentPatient = patientSession?.patient || patient?.patient;
-
-  const { data: weightHistory } = useQuery({
-    queryKey: ["/api/patient/weight-history", currentPatient?.id],
-    enabled: !!currentPatient?.id,
-  });
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -518,12 +526,47 @@ export default function Dashboard() {
                   </div>
                 </div>
               ) : (
-                <div className="h-64 flex flex-col items-center justify-center bg-gray-50 rounded-lg border-2 border-dashed border-gray-300">
-                  <TrendingUp className="text-gray-400 mb-4" size={48} />
-                  <h4 className="text-lg font-medium text-gray-600 mb-2">No hay registros de peso</h4>
-                  <p className="text-gray-500 text-center max-w-md">
-                    Los registros de peso aparecerán aquí cuando su profesional de la salud los añada al sistema.
-                  </p>
+                <div className="relative h-80 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-xl shadow-2xl overflow-hidden">
+                  <div className="absolute inset-0 opacity-20">
+                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-cyan-400/30 to-purple-600/30"></div>
+                    <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-400/20 rounded-full blur-xl animate-pulse"></div>
+                    <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-purple-400/20 rounded-full blur-xl animate-pulse" style={{animationDelay: '1s'}}></div>
+                  </div>
+                  
+                  <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-6">
+                    <div className="w-20 h-20 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-center mb-6 animate-bounce shadow-2xl">
+                      <TrendingUp className="text-white" size={40} />
+                    </div>
+                    <h4 className="text-2xl font-bold text-white mb-4">Evolución de Peso 3D</h4>
+                    <p className="text-gray-300 text-center max-w-md mb-6">
+                      Su gráfica de evolución con análisis visual avanzado aparecerá aquí cuando su profesional médico registre datos de peso.
+                    </p>
+                    
+                    <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shadow-lg">
+                          <span className="text-white font-bold text-xs">📉</span>
+                        </div>
+                        <span className="text-green-300 font-medium">Mejoras</span>
+                      </div>
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg">
+                          <span className="text-white font-bold text-xs">📈</span>
+                        </div>
+                        <span className="text-red-300 font-medium">Retrocesos</span>
+                      </div>
+                      <div className="flex flex-col items-center space-y-2">
+                        <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center shadow-lg">
+                          <span className="text-white font-bold text-xs">➡️</span>
+                        </div>
+                        <span className="text-yellow-300 font-medium">Estable</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 text-xs text-gray-400">
+                      Visualización interactiva con efectos 3D y códigos de color
+                    </div>
+                  </div>
                 </div>
               )}
             </CardContent>
