@@ -633,19 +633,29 @@ export default function Dashboard() {
                             stroke="url(#weightGradient)"
                             strokeWidth={4}
                             filter="url(#glow)"
-                            dot={({ cx, cy, payload, index }) => (
-                              <circle
-                                key={`dot-${index}`}
-                                cx={cx}
-                                cy={cy}
-                                r={8}
-                                fill={payload.color}
-                                stroke="#ffffff"
-                                strokeWidth={3}
-                                filter="url(#shadow)"
-                                className="animate-pulse"
-                              />
-                            )}
+                            dot={({ cx, cy, payload, index }) => {
+                              // Calcular tamaño basado en el tipo de cambio
+                              const baseSize = 8;
+                              const sizeVariation = payload.trend === 'mejora' ? 2 : 
+                                                   payload.trend === 'retroceso' ? -1 : 0;
+                              const finalSize = baseSize + sizeVariation;
+                              
+                              return (
+                                <circle
+                                  key={`dot-${index}`}
+                                  cx={cx}
+                                  cy={cy}
+                                  r={finalSize}
+                                  fill={payload.color}
+                                  stroke="#ffffff"
+                                  strokeWidth={3}
+                                  filter="url(#shadow)"
+                                  style={{
+                                    transition: 'r 0.3s ease-in-out'
+                                  }}
+                                />
+                              );
+                            }}
                             activeDot={{
                               r: 12,
                               fill: '#06b6d4',
@@ -660,16 +670,16 @@ export default function Dashboard() {
                     
                     <div className="mt-4 flex justify-center space-x-6 text-sm">
                       <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 bg-green-500 rounded-full shadow-lg animate-pulse"></div>
-                        <span className="text-green-300 font-medium">📉 Mejora</span>
+                        <div className="w-5 h-5 bg-green-500 rounded-full shadow-lg"></div>
+                        <span className="text-green-300 font-medium">📉 Mejora (punto grande)</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 bg-red-500 rounded-full shadow-lg animate-pulse"></div>
-                        <span className="text-red-300 font-medium">📈 Retroceso</span>
+                        <div className="w-3 h-3 bg-red-500 rounded-full shadow-lg"></div>
+                        <span className="text-red-300 font-medium">📈 Retroceso (punto pequeño)</span>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <div className="w-4 h-4 bg-yellow-500 rounded-full shadow-lg animate-pulse"></div>
-                        <span className="text-yellow-300 font-medium">➡️ Sin cambio</span>
+                        <div className="w-4 h-4 bg-yellow-500 rounded-full shadow-lg"></div>
+                        <span className="text-yellow-300 font-medium">➡️ Sin cambio (punto normal)</span>
                       </div>
                     </div>
                   </div>
@@ -678,8 +688,8 @@ export default function Dashboard() {
                 <div className="relative h-80 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-xl shadow-2xl overflow-hidden">
                   <div className="absolute inset-0 opacity-20">
                     <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-cyan-400/30 to-purple-600/30"></div>
-                    <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-400/20 rounded-full blur-xl animate-pulse"></div>
-                    <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-purple-400/20 rounded-full blur-xl animate-pulse" style={{animationDelay: '1s'}}></div>
+                    <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-blue-400/20 rounded-full blur-xl"></div>
+                    <div className="absolute bottom-1/4 right-1/4 w-40 h-40 bg-purple-400/20 rounded-full blur-xl"></div>
                   </div>
                   
                   <div className="relative z-10 h-full flex flex-col items-center justify-center text-center p-6">
