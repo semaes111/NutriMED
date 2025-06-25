@@ -26,12 +26,27 @@ function generateAccessCode(): string {
 // Patient authentication middleware
 const isPatientAuthenticated = (req: any, res: any, next: any) => {
   // Check for active patient session
-  if (req.patientSession?.patient?.id) {
+  if (req.session?.patientSession?.patient?.id) {
     return next();
   }
   
   // If no session, return unauthorized
   return res.status(401).json({ message: "Unauthorized" });
+};
+
+// Professional authentication middleware
+const isProfessionalAuthenticated = (req: any, res: any, next: any) => {
+  // Check for professional session
+  if (req.session?.professionalData) {
+    return next();
+  }
+  
+  // Check for Replit authentication
+  if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
+    return next();
+  }
+  
+  return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -453,26 +468,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create new patient - supports both auth types
-  app.post("/api/professional/patients", async (req: any, res) => {
+  // Create new patient - uses professional auth middleware
+  app.post("/api/professional/patients", isProfessionalAuthenticated, async (req: any, res) => {
     try {
       console.log("Patient creation request received");
       console.log("Session exists:", !!req.session);
       console.log("Professional data in session:", !!(req.session as any)?.professionalData);
-      console.log("Session professional data:", (req.session as any)?.professionalData);
       console.log("Request body:", req.body);
-      
-      // Check for professional session first
-      const hasSessionAuth = (req.session as any)?.professionalData;
-      const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
-      
-      console.log("Session auth:", hasSessionAuth);
-      console.log("Replit auth:", hasReplitAuth);
-      
-      if (!hasSessionAuth && !hasReplitAuth) {
-        console.log("Authentication failed - no valid session or replit auth");
-        return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
-      }
 
       // Generate access code and set expiry
       const accessCode = generateAccessCode();
