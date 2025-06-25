@@ -28,6 +28,8 @@ import {
   Plus,
   Calendar,
   RefreshCw,
+  Ban,
+  AlertTriangle,
   TrendingUp,
   Settings
 } from "lucide-react";
@@ -74,6 +76,7 @@ export default function ProfessionalDashboardWorking() {
   const [showPatientDetail, setShowPatientDetail] = useState(false);
   const [showChangeDiet, setShowChangeDiet] = useState(false);
   const [showTargetWeightModal, setShowTargetWeightModal] = useState(false);
+  const [showRevokeCodeModal, setShowRevokeCodeModal] = useState(false);
 
   useEffect(() => {
     console.log('Working Professional Dashboard useEffect triggered');
@@ -281,6 +284,44 @@ export default function ProfessionalDashboardWorking() {
   const onSubmitTargetWeight = (data: any) => {
     targetWeightMutation.mutate(data);
   };
+
+  // Revoke code mutation
+  const revokeCodeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await apiRequest(`/api/professional/patients/${selectedPatient.id}/revoke-code`, {
+        method: "PATCH",
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "🚫 Código de Acceso Anulado",
+        description: `El código de acceso de ${selectedPatient?.name} ha sido anulado exitosamente. El paciente ya no podrá acceder al sistema.`,
+        variant: "default",
+        duration: 8000,
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/professional/patients"] });
+      setShowRevokeCodeModal(false);
+      
+      // Update selected patient to reflect the revoked status
+      if (selectedPatient) {
+        setSelectedPatient({
+          ...selectedPatient,
+          accessCode: data.accessCode || "ANULADO",
+          codeExpiry: new Date().toISOString() // Set to current date to show as expired
+        });
+      }
+    },
+    onError: (error: any) => {
+      console.error("Code revocation error:", error);
+      toast({
+        title: "❌ Error al Anular Código",
+        description: error.message || "Error al anular el código de acceso",
+        variant: "destructive",
+      });
+    },
+  });
 
   const onRevokeCode = () => {
     revokeCodeMutation.mutate();

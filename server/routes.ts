@@ -788,6 +788,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Revoke patient access code - supports both auth types
+  app.patch("/api/professional/patients/:patientId/revoke-code", async (req: any, res) => {
+    try {
+      // Check for professional session first
+      const hasSessionAuth = req.session?.professionalData;
+      const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
+      
+      if (!hasSessionAuth && !hasReplitAuth) {
+        return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
+      }
+
+      const patientId = parseInt(req.params.patientId);
+      console.log(`Professional requesting code revocation for patient ${patientId}`);
+
+      // Set code expiry to past date to revoke access
+      const revokedDate = new Date();
+      revokedDate.setDate(revokedDate.getDate() - 1); // Set to yesterday
+
+      await storage.updatePatientAccessCode(patientId, "ANULADO", revokedDate);
+
+      console.log(`Access code revoked for patient ${patientId}`);
+
+      res.json({ 
+        message: "Código de acceso anulado exitosamente",
+        accessCode: "ANULADO",
+        revokedAt: revokedDate.toISOString()
+      });
+    } catch (error) {
+      console.error("Error revoking access code:", error);
+      res.status(500).json({ message: "Error al anular código de acceso" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
