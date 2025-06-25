@@ -133,12 +133,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get diet levels - supports both auth types
+  // Get diet levels with code validation
+  app.get("/api/diet-levels/:code", async (req: any, res) => {
+    try {
+      const accessCode = req.params.code;
+      console.log("Diet levels request with code:", accessCode);
+      
+      // Validate professional code
+      const professional = await storage.getProfessionalByAccessCode(accessCode);
+      if (!professional || !professional.isActive) {
+        console.log("Invalid professional code:", accessCode);
+        return res.status(401).json({ message: "Código profesional inválido" });
+      }
+      
+      console.log("Professional validated, fetching diet levels");
+      const dietLevels = await storage.getDietLevels();
+      console.log("Diet levels found:", dietLevels.length);
+      return res.json(dietLevels);
+    } catch (error) {
+      console.error("Error fetching diet levels:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // Get diet levels - supports both auth types (legacy endpoint)
   app.get("/api/diet-levels", async (req: any, res) => {
     try {
       console.log("Diet levels request - Session ID:", req.sessionID);
       console.log("Professional session exists:", !!req.session?.professionalData);
-      console.log("Full session data:", JSON.stringify(req.session, null, 2));
+      
+      // Check for professional access code in headers
+      const professionalCode = req.headers['x-professional-code'];
+      console.log("Diet levels - Professional code in headers:", professionalCode);
+      
+      if (professionalCode) {
+        console.log("Diet levels request via header code:", professionalCode);
+        const professional = await storage.getProfessionalByAccessCode(professionalCode);
+        if (professional && professional.isActive) {
+          const dietLevels = await storage.getDietLevels();
+          console.log("Diet levels found via header auth:", dietLevels.length);
+          return res.json(dietLevels);
+        }
+      }
       
       // Check for professional session or Replit auth
       const hasSessionAuth = req.session?.professionalData;
@@ -499,12 +535,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all patients for professional - supports both auth types
+  // Get all patients for professional with code validation
+  app.get("/api/professional/patients/:code", async (req: any, res) => {
+    try {
+      const accessCode = req.params.code;
+      console.log("Professional patients request with code:", accessCode);
+      
+      // Validate professional code
+      const professional = await storage.getProfessionalByAccessCode(accessCode);
+      if (!professional || !professional.isActive) {
+        console.log("Invalid professional code:", accessCode);
+        return res.status(401).json({ message: "Código profesional inválido" });
+      }
+      
+      console.log("Professional validated, fetching patients");
+      const patients = await storage.getAllPatients();
+      console.log("Patients found:", patients.length);
+      return res.json(patients);
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // Get all patients for professional - supports both auth types (legacy endpoint)
   app.get("/api/professional/patients", async (req: any, res) => {
     try {
       console.log("Professional patients request - Session ID:", req.sessionID);
       console.log("Professional session exists:", !!req.session?.professionalData);
-      console.log("Full session data:", JSON.stringify(req.session, null, 2));
+      
+      // Check for professional access code in headers
+      const professionalCode = req.headers['x-professional-code'];
+      console.log("Professional code in headers:", professionalCode);
+      
+      if (professionalCode) {
+        console.log("Professional patients request via header code:", professionalCode);
+        const professional = await storage.getProfessionalByAccessCode(professionalCode);
+        if (professional && professional.isActive) {
+          const patients = await storage.getAllPatients();
+          console.log("Patients found via header auth:", patients.length);
+          return res.json(patients);
+        }
+      }
       
       // Check for professional session first
       if (req.session?.professionalData) {

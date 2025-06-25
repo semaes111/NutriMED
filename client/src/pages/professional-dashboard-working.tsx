@@ -101,15 +101,25 @@ export default function ProfessionalDashboardWorking() {
 
   // Get all patients
   const { data: patients, isLoading: isPatientsLoading } = useQuery({
-    queryKey: ["/api/professional/patients"],
-    enabled: !!professionalInfo,
+    queryKey: ["/api/professional/patients", professionalInfo?.accessCode],
+    queryFn: async () => {
+      if (!professionalInfo?.accessCode) return [];
+      const response = await apiRequest("GET", `/api/professional/patients/${professionalInfo.accessCode}`);
+      return response.json();
+    },
+    enabled: !!professionalInfo?.accessCode,
     retry: false,
   });
 
   // Get diet levels
   const { data: dietLevels } = useQuery({
-    queryKey: ["/api/diet-levels"],
-    enabled: !!professionalInfo,
+    queryKey: ["/api/diet-levels", professionalInfo?.accessCode],
+    queryFn: async () => {
+      if (!professionalInfo?.accessCode) return [];
+      const response = await apiRequest("GET", `/api/diet-levels/${professionalInfo.accessCode}`);
+      return response.json();
+    },
+    enabled: !!professionalInfo?.accessCode,
     retry: false,
   });
 
@@ -364,10 +374,10 @@ export default function ProfessionalDashboardWorking() {
   };
 
   // Filter patients based on search term
-  const filteredPatients = (patients || []).filter((patient: any) =>
+  const filteredPatients = Array.isArray(patients) ? patients.filter((patient: any) =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.accessCode.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) : [];
 
   if (!professionalInfo) {
     return (

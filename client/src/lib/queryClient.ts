@@ -14,10 +14,24 @@ export async function apiRequest(
 ): Promise<Response> {
   // Add patient session header if available
   const patientSession = localStorage.getItem('patientSession');
+  const professionalInfo = localStorage.getItem('professionalInfo');
+  
   const headers: HeadersInit = data ? { "Content-Type": "application/json" } : {};
   
   if (patientSession) {
     headers['x-patient-session'] = patientSession;
+  }
+  
+  // Add professional code header if available
+  if (professionalInfo) {
+    try {
+      const professional = JSON.parse(professionalInfo);
+      if (professional.accessCode) {
+        headers['x-professional-code'] = professional.accessCode;
+      }
+    } catch (error) {
+      console.error('Error parsing professional info:', error);
+    }
   }
 
   const res = await fetch(url, {
@@ -39,10 +53,24 @@ export const getQueryFn: <T>(options: {
   async ({ queryKey }) => {
     // Add patient session header if available
     const patientSession = localStorage.getItem('patientSession');
+    const professionalInfo = localStorage.getItem('professionalInfo');
+    
     const headers: HeadersInit = {};
     
     if (patientSession) {
       headers['x-patient-session'] = patientSession;
+    }
+    
+    // Add professional code header if available
+    if (professionalInfo) {
+      try {
+        const professional = JSON.parse(professionalInfo);
+        if (professional.accessCode) {
+          headers['x-professional-code'] = professional.accessCode;
+        }
+      } catch (error) {
+        console.error('Error parsing professional info:', error);
+      }
     }
 
     const res = await fetch(queryKey[0] as string, {
