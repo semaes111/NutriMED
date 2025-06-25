@@ -36,8 +36,8 @@ interface NutritionalTipProps {
 const nutritionalTips: NutritionalTip[] = [
   {
     id: "hydration-morning",
-    title: "Hidratación Matutina",
-    content: "Comienza tu día con un vaso de agua tibia con limón. Ayuda a activar tu metabolismo y aporta vitamina C.",
+    title: "💧 Hidratación Matutina",
+    content: "🌅 Comienza tu día con un vaso de agua tibia con limón. Ayuda a activar tu metabolismo y aporta vitamina C.",
     category: "hydration",
     dietLevel: [1, 2, 3, 4, 5],
     timeOfDay: "morning",
@@ -46,8 +46,8 @@ const nutritionalTips: NutritionalTip[] = [
   },
   {
     id: "protein-timing",
-    title: "Proteína en el Desayuno",
-    content: "Incluir proteína en tu desayuno te ayudará a mantener la saciedad hasta la siguiente comida.",
+    title: "🥚 Proteína en el Desayuno",
+    content: "🍳 Incluir proteína en tu desayuno te ayudará a mantener la saciedad hasta la siguiente comida.",
     category: "nutrition",
     dietLevel: [2, 3, 4, 5],
     timeOfDay: "morning",
@@ -56,8 +56,8 @@ const nutritionalTips: NutritionalTip[] = [
   },
   {
     id: "mindful-eating",
-    title: "Alimentación Consciente",
-    content: "Come sin distracciones. Mastica lentamente y disfruta cada bocado para mejor digestión.",
+    title: "🧘 Alimentación Consciente",
+    content: "🍽️ Come sin distracciones. Mastica lentamente y disfruta cada bocado para mejor digestión.",
     category: "motivation",
     dietLevel: [1, 2, 3, 4, 5],
     timeOfDay: "any",
@@ -66,8 +66,8 @@ const nutritionalTips: NutritionalTip[] = [
   },
   {
     id: "afternoon-energy",
-    title: "Energía Vespertina",
-    content: "Si sientes fatiga por la tarde, opta por una merienda rica en fibra y proteína en lugar de azúcares.",
+    title: "⚡ Energía Vespertina",
+    content: "🍎 Si sientes fatiga por la tarde, opta por una merienda rica en fibra y proteína en lugar de azúcares.",
     category: "timing",
     dietLevel: [1, 2, 3, 4, 5],
     timeOfDay: "afternoon",
@@ -76,8 +76,8 @@ const nutritionalTips: NutritionalTip[] = [
   },
   {
     id: "progress-celebration",
-    title: "Celebra tus Logros",
-    content: "¡Excelente progreso! Cada pequeño cambio cuenta hacia tu objetivo de salud.",
+    title: "🎉 Celebra tus Logros",
+    content: "📈 ¡Excelente progreso! Cada pequeño cambio cuenta hacia tu objetivo de salud.",
     category: "progress",
     dietLevel: [1, 2, 3, 4, 5],
     timeOfDay: "any",
@@ -86,8 +86,8 @@ const nutritionalTips: NutritionalTip[] = [
   },
   {
     id: "omega3-importance",
-    title: "Omega-3 Esencial",
-    content: "Incluye pescados grasos como salmón o sardinas 2-3 veces por semana para obtener omega-3.",
+    title: "🐟 Omega-3 Esencial",
+    content: "🍤 Incluye pescados grasos como salmón o sardinas 2-3 veces por semana para obtener omega-3.",
     category: "nutrition",
     dietLevel: [3, 4, 5],
     timeOfDay: "any",
@@ -96,8 +96,8 @@ const nutritionalTips: NutritionalTip[] = [
   },
   {
     id: "movement-reminder",
-    title: "Movimiento Post-Comida",
-    content: "Una caminata ligera de 10 minutos después de comer ayuda a la digestión y control glucémico.",
+    title: "🚶 Movimiento Post-Comida",
+    content: "👟 Una caminata ligera de 10 minutos después de comer ayuda a la digestión y control glucémico.",
     category: "exercise",
     dietLevel: [1, 2, 3, 4, 5],
     timeOfDay: "any",
@@ -106,8 +106,8 @@ const nutritionalTips: NutritionalTip[] = [
   },
   {
     id: "evening-prep",
-    title: "Preparación Nocturna",
-    content: "Prepara tu desayuno la noche anterior. Te ayudará a mantener consistencia en tu plan nutricional.",
+    title: "🌙 Preparación Nocturna",
+    content: "📋 Prepara tu desayuno la noche anterior. Te ayudará a mantener consistencia en tu plan nutricional.",
     category: "timing",
     dietLevel: [1, 2, 3, 4, 5],
     timeOfDay: "evening",

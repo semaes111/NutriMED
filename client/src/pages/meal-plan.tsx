@@ -212,41 +212,41 @@ export default function MealPlan() {
 
   const lunchData = {
     beverages: [
-      "Agua (con o sin gas)",
-      "Agua infusionada (limón, pepino, menta, albahaca)",
-      "Té verde (sin azúcar)",
-      "Infusiones (jengibre, cúrcuma, manzanilla)"
+      "💧 Agua (con o sin gas)",
+      "🌿 Agua infusionada (limón, pepino, menta, albahaca)",
+      "🍵 Té verde (sin azúcar)",
+      "🫖 Infusiones (jengibre, cúrcuma, manzanilla)"
     ],
     salads: [
-      "Ensalada mixta: kale, espinacas, rúcula, canónigos",
-      "Ensalada caprese: tomate, mozzarella, albahaca",
-      "Ensalada antiox: pepino, pimiento, espinacas"
+      "🥗 Ensalada mixta: kale, espinacas, rúcula, canónigos",
+      "🍅 Ensalada caprese: tomate, mozzarella, albahaca",
+      "🥒 Ensalada antiox: pepino, pimiento, espinacas"
     ],
     proteins: [
-      "Pescados: merluza, bacalao, salmón, trucha, caballa",
-      "Carnes magras: cerdo (lomo), pollo, pavo, ternera",
-      "Huevos: plancha, tortilla, revueltos, cocidos"
+      "🐟 Pescados: merluza, bacalao, salmón, trucha, caballa",
+      "🍗 Carnes magras: cerdo (lomo), pollo, pavo, ternera",
+      "🥚 Huevos: plancha, tortilla, revueltos, cocidos"
     ],
     vegetables: [
-      "Espinacas, brócoli, col rizada, pimientos rojos",
-      "Alcachofas, coles de Bruselas, acelgas, berenjena",
-      "Tomate, zanahoria, puerros, champiñones"
+      "🥬 Espinacas, brócoli, col rizada, pimientos rojos",
+      "🥦 Alcachofas, coles de Bruselas, acelgas, berenjena",
+      "🍅 Tomate, zanahoria, puerros, champiñones"
     ]
   };
 
   const chiaRecipe = {
     id: 1,
-    name: "Pudding de Chía",
+    name: "🥄 Pudding de Chía",
     description: "Receta especial rica en omega-3 y fibra",
     ingredients: [
-      "Leche/bebida vegetal/yogur natural",
-      "1 cucharada sopera de chía",
-      "Fruta permitida (opcional)"
+      "🥛 Leche/bebida vegetal/yogur natural",
+      "🌿 1 cucharada sopera de chía",
+      "🍎 Fruta permitida (opcional)"
     ],
     instructions: [
-      "Mezclar todos los ingredientes en un recipiente",
-      "Dejar reposar toda la noche en el refrigerador",
-      "Servir frío por la mañana con fruta si se desea"
+      "🥄 Mezclar todos los ingredientes en un recipiente",
+      "🌙 Dejar reposar toda la noche en el refrigerador",
+      "❄️ Servir frío por la mañana con fruta si se desea"
     ],
     preparationTime: 5,
     category: "breakfast"

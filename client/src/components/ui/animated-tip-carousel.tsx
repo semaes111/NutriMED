@@ -36,8 +36,8 @@ interface AnimatedTipCarouselProps {
 const defaultTips: TipCarouselItem[] = [
   {
     id: "tip1",
-    title: "Hidratación Inteligente",
-    content: "Bebe agua antes de sentir sed. Tu cuerpo necesita hidratación constante para funcionar óptimamente.",
+    title: "💧 Hidratación Inteligente",
+    content: "🥤 Bebe agua antes de sentir sed. Tu cuerpo necesita hidratación constante para funcionar óptimamente.",
     category: "Hidratación",
     icon: <Lightbulb className="w-5 h-5" />,
     color: "from-blue-400 to-blue-600",
@@ -45,8 +45,8 @@ const defaultTips: TipCarouselItem[] = [
   },
   {
     id: "tip2", 
-    title: "Masticación Consciente",
-    content: "Mastica cada bocado al menos 20 veces. Esto mejora la digestión y te ayuda a sentirte satisfecho.",
+    title: "🍽️ Masticación Consciente",
+    content: "🔄 Mastica cada bocado al menos 20 veces. Esto mejora la digestión y te ayuda a sentirte satisfecho.",
     category: "Digestión",
     icon: <Heart className="w-5 h-5" />,
     color: "from-green-400 to-green-600",
@@ -54,8 +54,8 @@ const defaultTips: TipCarouselItem[] = [
   },
   {
     id: "tip3",
-    title: "Timing Perfecto",
-    content: "Los horarios regulares de comida ayudan a tu metabolismo a funcionar de manera más eficiente.",
+    title: "⏰ Timing Perfecto",
+    content: "📅 Los horarios regulares de comida ayudan a tu metabolismo a funcionar de manera más eficiente.",
     category: "Horarios",
     icon: <Clock className="w-5 h-5" />,
     color: "from-purple-400 to-purple-600", 
@@ -63,8 +63,8 @@ const defaultTips: TipCarouselItem[] = [
   },
   {
     id: "tip4",
-    title: "Progreso Gradual",
-    content: "Cada pequeño cambio cuenta. La constancia es más importante que la perfección.",
+    title: "📈 Progreso Gradual",
+    content: "✨ Cada pequeño cambio cuenta. La constancia es más importante que la perfección.",
     category: "Motivación",
     icon: <TrendingUp className="w-5 h-5" />,
     color: "from-orange-400 to-orange-600",
