@@ -699,15 +699,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update patient diet level - supports both auth types
+  // Update patient diet level - supports professional code authentication
   app.patch("/api/professional/patients/:patientId/diet-level", async (req: any, res) => {
     try {
-      // Check for professional session first
-      const hasSessionAuth = req.session?.professionalData;
-      const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
+      console.log("Diet level update request for patient:", req.params.patientId);
       
-      if (!hasSessionAuth && !hasReplitAuth) {
-        return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
+      // Check for professional access code in headers first
+      const professionalCode = req.headers['x-professional-code'];
+      console.log("Professional code in headers:", professionalCode);
+      
+      if (professionalCode) {
+        console.log("Diet level update via header code:", professionalCode);
+        const professional = await storage.getProfessionalByAccessCode(professionalCode);
+        if (professional && professional.isActive) {
+          console.log("Professional authenticated for diet level update");
+          // Continue with diet level update logic
+        } else {
+          console.log("Invalid professional code for diet level update");
+          return res.status(401).json({ message: "Código profesional inválido" });
+        }
+      } else {
+        // Check for professional session
+        const hasSessionAuth = req.session?.professionalData;
+        const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
+        
+        if (!hasSessionAuth && !hasReplitAuth) {
+          console.log("Diet level update - No valid authentication found");
+          return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
+        }
       }
 
       const patientId = parseInt(req.params.patientId);

@@ -267,9 +267,22 @@ export default function ProfessionalDashboardWorking() {
   // Change diet level mutation
   const changeDietMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("PATCH", `/api/professional/patients/${selectedPatient.id}/diet-level`, {
-        dietLevel: parseInt(data.dietLevel),
+      const response = await fetch(`/api/professional/patients/${selectedPatient.id}/diet-level`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-professional-code': professionalInfo.accessCode
+        },
+        body: JSON.stringify({
+          dietLevel: parseInt(data.dietLevel),
+        })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al cambiar nivel de dieta');
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
