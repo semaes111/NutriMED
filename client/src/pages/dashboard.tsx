@@ -29,7 +29,6 @@ import {
   TrendingUp
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { WeightMilestoneAchievements } from "@/components/ui/weight-milestone-achievements";
 
 export default function Dashboard() {
   const [, setLocation] = useLocation();
@@ -37,7 +36,6 @@ export default function Dashboard() {
   const [patientSession, setPatientSession] = useState<any>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>("");
   const [showNutritionalTip, setShowNutritionalTip] = useState(true);
-  const [showMilestoneModal, setShowMilestoneModal] = useState(false);
 
   // Check for patient session (access code login)
   useEffect(() => {
@@ -129,23 +127,6 @@ export default function Dashboard() {
     queryKey: ["/api/patient/weight-history", currentPatient?.id],
     enabled: !!currentPatient?.id,
   });
-
-  // Check for new milestone achievements when weight data changes
-  useEffect(() => {
-    if (weightHistory && weightHistory.length > 0 && currentPatient) {
-      // Check if this is a new weight entry and if milestones should be checked
-      const lastEntry = localStorage.getItem('lastWeightCheck');
-      const currentEntry = weightHistory[weightHistory.length - 1]?.id;
-      
-      if (lastEntry !== String(currentEntry)) {
-        // Small delay to allow user to see the weight update first
-        setTimeout(() => {
-          setShowMilestoneModal(true);
-        }, 1500);
-        localStorage.setItem('lastWeightCheck', String(currentEntry));
-      }
-    }
-  }, [weightHistory, currentPatient]);
 
   const logoutMutation = useMutation({
     mutationFn: async () => {
