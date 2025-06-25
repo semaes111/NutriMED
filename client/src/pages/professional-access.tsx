@@ -38,7 +38,10 @@ export default function ProfessionalAccess() {
       });
       // Store professional info in localStorage for the session
       localStorage.setItem('professionalInfo', JSON.stringify(data.professional));
-      setLocation("/professional-dashboard");
+      
+      // Force navigation to professional dashboard
+      console.log("Redirecting to professional dashboard...");
+      window.location.href = "/professional-dashboard";
     },
     onError: (error) => {
       console.error("Professional validation error:", error);

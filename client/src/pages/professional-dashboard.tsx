@@ -68,7 +68,10 @@ export default function ProfessionalDashboard() {
   const [professionalInfo, setProfessionalInfo] = useState<any>(null);
   
   useEffect(() => {
+    console.log('ProfessionalDashboard useEffect triggered');
     const storedInfo = localStorage.getItem('professionalInfo');
+    console.log('StoredInfo from localStorage:', storedInfo);
+    
     if (storedInfo) {
       try {
         const parsed = JSON.parse(storedInfo);
@@ -77,6 +80,7 @@ export default function ProfessionalDashboard() {
       } catch (error) {
         console.error('Error parsing professional info:', error);
         localStorage.removeItem('professionalInfo');
+        console.log('Redirecting to professional-access due to parse error');
         setLocation('/professional-access');
       }
     } else {
@@ -86,6 +90,8 @@ export default function ProfessionalDashboard() {
   }, [setLocation]);
   
   const isValidated = !!professionalInfo;
+  
+  console.log('Professional Dashboard render - isValidated:', isValidated, 'professionalInfo:', professionalInfo);
 
   // Get professional profile - only if no localStorage data
   const { data: professional, isLoading: isProfessionalLoading } = useQuery({
