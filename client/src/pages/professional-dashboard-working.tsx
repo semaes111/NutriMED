@@ -288,9 +288,7 @@ export default function ProfessionalDashboardWorking() {
   // Revoke code mutation
   const revokeCodeMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest(`/api/professional/patients/${selectedPatient.id}/revoke-code`, {
-        method: "PATCH",
-      });
+      const response = await apiRequest("PATCH", `/api/professional/patients/${selectedPatient.id}/revoke-code`);
       return response.json();
     },
     onSuccess: (data) => {
