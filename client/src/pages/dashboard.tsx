@@ -519,7 +519,7 @@ export default function Dashboard() {
                             
                             console.log("Chart data sorted by createdAt:", sortedData.map(r => ({ id: r.id, weight: r.weight, createdAt: r.createdAt })));
                             
-                            return sortedData
+                            const chartData = sortedData
                               .map((record, index, arr) => {
                                 const weight = parseFloat(record.weight);
                                 const prevWeight = index > 0 ? parseFloat(arr[index - 1].weight) : weight;
@@ -535,9 +535,17 @@ export default function Dashboard() {
                                   color: isEqual ? '#fbbf24' : (isImprovement ? '#10b981' : '#ef4444'),
                                   trend: isEqual ? 'igual' : (isImprovement ? 'mejora' : 'retroceso'),
                                   change: index > 0 ? (weight - prevWeight).toFixed(1) : '0.0',
-                                  recordId: record.id
+                                  recordId: record.id,
+                                  createdAt: record.createdAt
                                 };
                               });
+                            
+                            console.log("Final chart data:", chartData);
+                            console.log("Last point in chart:", chartData[chartData.length - 1]);
+                            console.log("Latest weight from calculation:", weightHistory
+                              .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())[0]);
+                            
+                            return chartData;
                           })()}
                           margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
                       >
