@@ -160,53 +160,53 @@ export default function MealPlan() {
     ],
     option1: {
       proteins: [
-        "Huevos revueltos, cocidos, plancha",
-        "Yogur natural/griego/cabra/soja/skyr/kéfir (sin azúcar)"
+        "🥚 Huevos revueltos, cocidos, plancha",
+        "🍶 Yogur natural/griego/cabra/soja/skyr/kéfir (sin azúcar)"
       ],
       fruits: [
-        "Manzana (x1)",
-        "Kiwi (x1)",
-        "Naranja (x1)",
-        "Pera (x1)",
-        "Arándanos, frambuesas, moras (1/2 taza)",
-        "Piña (x2)"
+        "🍎 Manzana (x1)",
+        "🥝 Kiwi (x1)",
+        "🍊 Naranja (x1)",
+        "🍐 Pera (x1)",
+        "🫐 Arándanos, frambuesas, moras (1/2 taza)",
+        "🍍 Piña (x2)"
       ],
       cereals: [
-        "Porridge de avena integral (1/2 taza)",
-        "Pudding de chía",
-        "Cereales integrales con yogur"
+        "🥣 Porridge de avena integral (1/2 taza)",
+        "🌿 Pudding de chía",
+        "🥣 Cereales integrales con yogur"
       ]
     },
     option2: {
       basics: [
-        "Yogur natural sin azúcar",
-        "Huevos preparados",
-        "Frutas permitidas"
+        "🍶 Yogur natural sin azúcar",
+        "🥚 Huevos preparados",
+        "🍎 Frutas permitidas"
       ]
     }
   };
 
   const snackData = {
     allowedComplements: [
-      "Atún, jamón, pavo, pollo",
-      "Calamares (pueden ser en salsa americana)",
-      "Queso, sobrasada, lomo embuchado",
-      "Tomate, AOVE, mantequilla light, aguacate"
+      "🐟 Atún, jamón, pavo, pollo",
+      "🦑 Calamares (pueden ser en salsa americana)",
+      "🧀 Queso, sobrasada, lomo embuchado",
+      "🍅 Tomate, AOVE, mantequilla light, aguacate"
     ],
     option1: [
-      "Frutos secos: almendras, nueces, avellanas, pistachos (1/2 taza)",
-      "Fruta natural: manzana, cerezas, kiwi, naranja, pera",
-      "Yogur natural/griego/cabra/soja/sky/kéfir (sin azúcar)",
-      "Smoothie: agua/leche + fruta + vegetales + semillas",
-      "Encurtidos: pepinillos, aceitunas, zanahorias (1 taza)",
-      "Huevos (cocido, tortilla, plancha, revueltos)"
+      "🌰 Frutos secos: almendras, nueces, avellanas, pistachos (1/2 taza)",
+      "🍎 Fruta natural: manzana, cerezas, kiwi, naranja, pera",
+      "🍶 Yogur natural/griego/cabra/soja/sky/kéfir (sin azúcar)",
+      "🥤 Smoothie: agua/leche + fruta + vegetales + semillas",
+      "🥒 Encurtidos: pepinillos, aceitunas, zanahorias (1 taza)",
+      "🥚 Huevos (cocido, tortilla, plancha, revueltos)"
     ],
     option2: [
-      "Frutos secos: almendras, nueces, nueces de macadamia",
-      "Fruta natural: manzana, kiwi, nectarina, naranja, pera",
-      "Yogur natural/griego/cabra/soja/sky/kéfir (sin azúcar)",
-      "Smoothie con ingredientes permitidos",
-      "Encurtidos permitidos (1 taza)"
+      "🌰 Frutos secos: almendras, nueces, nueces de macadamia",
+      "🍎 Fruta natural: manzana, kiwi, nectarina, naranja, pera",
+      "🍶 Yogur natural/griego/cabra/soja/sky/kéfir (sin azúcar)",
+      "🥤 Smoothie con ingredientes permitidos",
+      "🥒 Encurtidos permitidos (1 taza)"
     ]
   };
 
