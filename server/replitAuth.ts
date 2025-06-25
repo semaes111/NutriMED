@@ -32,10 +32,11 @@ export function getSession() {
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || 'default-secret-key',
     store: sessionStore,
-    resave: false,
+    resave: true, // Force session save
     saveUninitialized: true, // Enable saving uninitialized sessions
+    rolling: true, // Reset expiration on each request
     cookie: {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production', // Only secure in production

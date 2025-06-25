@@ -136,17 +136,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get diet levels - supports both auth types
   app.get("/api/diet-levels", async (req: any, res) => {
     try {
+      console.log("Diet levels request - Session ID:", req.sessionID);
+      console.log("Professional session exists:", !!req.session?.professionalData);
+      console.log("Full session data:", JSON.stringify(req.session, null, 2));
+      
       // Check for professional session or Replit auth
       const hasSessionAuth = req.session?.professionalData;
       const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
       
       if (!hasSessionAuth && !hasReplitAuth) {
+        console.log("Diet levels request - No valid authentication found");
         return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación" });
       }
       
       console.log("Diet levels request - Auth type:", hasSessionAuth ? 'session' : 'replit');
       
       const dietLevels = await storage.getDietLevels();
+      console.log("Diet levels found:", dietLevels.length);
       res.json(dietLevels);
     } catch (error) {
       console.error("Error fetching diet levels:", error);
@@ -496,24 +502,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all patients for professional - supports both auth types
   app.get("/api/professional/patients", async (req: any, res) => {
     try {
+      console.log("Professional patients request - Session ID:", req.sessionID);
+      console.log("Professional session exists:", !!req.session?.professionalData);
+      console.log("Full session data:", JSON.stringify(req.session, null, 2));
+      
       // Check for professional session first
       if (req.session?.professionalData) {
-        console.log("Professional patients request via session");
+        console.log("Professional patients request via session - fetching all patients");
         const patients = await storage.getAllPatients();
+        console.log("Patients found:", patients.length);
         return res.json(patients);
       }
       
       // Fallback to Replit auth
       if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
+        console.log("Professional patients request via Replit auth");
         const userId = req.user.claims.sub;
         const professional = await storage.getProfessionalByUserId(userId);
         
         if (professional) {
+          console.log("Professional found via Replit auth - fetching all patients");
           const patients = await storage.getAllPatients();
+          console.log("Patients found:", patients.length);
           return res.json(patients);
         }
       }
       
+      console.log("Professional patients request - No valid authentication found");
       return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
     } catch (error) {
       console.error("Error fetching patients:", error);
