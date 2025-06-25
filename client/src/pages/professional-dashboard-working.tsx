@@ -1464,11 +1464,11 @@ export default function ProfessionalDashboardWorking() {
                           className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         >
                           <option value="">Seleccionar nivel de dieta...</option>
-                          {dietLevels?.map((level: any) => (
-                            <option key={level.id} value={level.level.toString()}>
-                              Nivel {level.level} - {level.name}
-                            </option>
-                          ))}
+                          <option value="1">Nivel 1 - Dieta Básica</option>
+                          <option value="2">Nivel 2 - Dieta Intermedia</option>
+                          <option value="3">Nivel 3 - Dieta Avanzada</option>
+                          <option value="4">Nivel 4 - Dieta Restrictiva</option>
+                          <option value="5">Nivel 5 - Dieta Muy Restrictiva</option>
                         </select>
                       </FormControl>
                       <FormMessage />
