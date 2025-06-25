@@ -34,13 +34,14 @@ export function getSession() {
   return session({
     secret: process.env.SESSION_SECRET!,
     store: sessionStore,
-    resave: true, // Force session save
-    saveUninitialized: true, // Enable saving uninitialized sessions
+    resave: false,
+    saveUninitialized: false,
+    name: 'sessionId',
     cookie: {
       httpOnly: true,
-      secure: false, // Disable secure for development
+      secure: false,
       maxAge: sessionTtl,
-      sameSite: 'lax' // Enable cross-origin requests
+      sameSite: 'lax'
     },
   });
 }
