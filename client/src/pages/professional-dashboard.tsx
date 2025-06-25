@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,6 +57,7 @@ type TargetWeightForm = z.infer<typeof targetWeightSchema>;
 export default function ProfessionalDashboard() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showCreatePatient, setShowCreatePatient] = useState(false);
   const [showAddWeight, setShowAddWeight] = useState(false);
