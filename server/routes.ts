@@ -782,14 +782,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update patient target weight - supports both auth types
+  // Update patient target weight - supports professional code authentication
   app.patch("/api/professional/patients/:id/target-weight", async (req: any, res) => {
     try {
-      // Check for professional session first
+      console.log("Target weight update request for patient:", req.params.id);
+      
+      // Check for professional access code in headers first
+      const professionalCode = req.headers['x-professional-code'];
+      console.log("Professional code in headers:", professionalCode);
+      
+      if (professionalCode) {
+        console.log("Target weight update via header code:", professionalCode);
+        const professional = await storage.getProfessionalByAccessCode(professionalCode);
+        if (professional && professional.isActive) {
+          const patientId = parseInt(req.params.id);
+          const { targetWeight } = req.body;
+          
+          if (!targetWeight || isNaN(parseFloat(targetWeight)) || parseFloat(targetWeight) < 10 || parseFloat(targetWeight) > 500) {
+            return res.status(400).json({ message: "Peso objetivo inválido (debe ser entre 10 y 500 kg)" });
+          }
+          
+          await storage.updatePatientTargetWeight(patientId, parseFloat(targetWeight));
+          console.log("Target weight updated successfully via professional code");
+          return res.json({ 
+            message: "Peso objetivo actualizado exitosamente",
+            patientId,
+            newTargetWeight: parseFloat(targetWeight)
+          });
+        }
+      }
+      
+      // Check for professional session
       const hasSessionAuth = req.session?.professionalData;
       const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
       
       if (!hasSessionAuth && !hasReplitAuth) {
+        console.log("Target weight update - No valid authentication found");
         return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
       }
       

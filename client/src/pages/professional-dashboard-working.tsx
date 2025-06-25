@@ -295,9 +295,22 @@ export default function ProfessionalDashboardWorking() {
   // Target weight mutation
   const targetWeightMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("PATCH", `/api/professional/patients/${selectedPatient.id}/target-weight`, {
-        targetWeight: parseFloat(data.targetWeight)
+      const response = await fetch(`/api/professional/patients/${selectedPatient.id}/target-weight`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-professional-code': professionalInfo.accessCode
+        },
+        body: JSON.stringify({
+          targetWeight: parseFloat(data.targetWeight)
+        })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al actualizar peso objetivo');
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
