@@ -177,10 +177,23 @@ export default function ProfessionalDashboardWorking() {
   // Add weight mutation
   const addWeightMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", `/api/professional/patients/${selectedPatient.id}/weight`, {
-        weight: parseFloat(data.weight),
-        notes: data.notes || "",
+      const response = await fetch(`/api/professional/patients/${selectedPatient.id}/weight`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-professional-code': professionalInfo.accessCode
+        },
+        body: JSON.stringify({
+          weight: parseFloat(data.weight),
+          notes: data.notes || "",
+        })
       });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Error al registrar peso');
+      }
+      
       return response.json();
     },
     onSuccess: (data) => {
