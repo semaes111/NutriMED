@@ -451,11 +451,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Create new patient - supports both auth types
   app.post("/api/professional/patients", async (req: any, res) => {
     try {
+      console.log("Patient creation request received");
+      console.log("Session exists:", !!req.session);
+      console.log("Professional data in session:", !!req.session?.professionalData);
+      console.log("Session professional data:", req.session?.professionalData);
+      console.log("Request body:", req.body);
+      
       // Check for professional session first
       const hasSessionAuth = req.session?.professionalData;
       const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
       
+      console.log("Session auth:", hasSessionAuth);
+      console.log("Replit auth:", hasReplitAuth);
+      
       if (!hasSessionAuth && !hasReplitAuth) {
+        console.log("Authentication failed - no valid session or replit auth");
         return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
       }
 
@@ -480,6 +490,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Creating patient with data:", patientData);
       const newPatient = await storage.createPatient(patientData);
+      console.log("Patient created successfully:", newPatient);
 
       res.json({
         patient: newPatient,
