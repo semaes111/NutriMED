@@ -234,8 +234,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       console.log("Patient validation successful");
-      res.json({
-        valid: true,
+      
+      // Initialize session if it doesn't exist
+      if (!req.session) {
+        req.session = {};
+      }
+      
+      // Create patient session for dashboard access
+      req.session.patientSession = {
         patient: {
           id: patient.id,
           name: patient.name,
@@ -247,11 +253,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
           initialWeight: patient.initialWeight,
           targetWeight: patient.targetWeight,
           medicalNotes: patient.medicalNotes
+        },
+        loginTime: new Date()
+      };
+
+      console.log("Patient session created for dashboard access:", req.session.patientSession);
+      
+      // Force session save with callback
+      req.session.save((err: any) => {
+        if (err) {
+          console.error('Patient session save error:', err);
+          return res.status(500).json({ message: "Error al crear sesión de paciente" });
         }
+        
+        console.log('Patient session saved successfully');
+        console.log('Session ID:', req.sessionID);
+        console.log('Cookie settings:', {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax'
+        });
+        
+        res.json({
+          valid: true,
+          patient: {
+            id: patient.id,
+            name: patient.name,
+            dietLevel: patient.dietLevel,
+            accessCode: patient.accessCode,
+            codeExpiry: patient.codeExpiry,
+            age: patient.age,
+            height: patient.height,
+            initialWeight: patient.initialWeight,
+            targetWeight: patient.targetWeight,
+            medicalNotes: patient.medicalNotes
+          }
+        });
       });
     } catch (error) {
       console.error("Error validating patient code:", error);
       res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // Patient weight history by patient ID (session-based access)
+  app.get('/api/patient/:id/weight-history', async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.id);
+      console.log(`Weight history request for patient ${patientId}`);
+      console.log("Session ID:", req.sessionID);
+      console.log("Session data:", req.session?.patientSession ? "exists" : "none");
+      console.log("Full session:", JSON.stringify(req.session, null, 2));
+      
+      // Check if there's a patient session
+      const sessionData = req.session?.patientSession;
+      if (sessionData && sessionData.patient && sessionData.patient.id === patientId) {
+        console.log(`Fetching weight history for authorized patient ${patientId}`);
+        const weightHistory = await storage.getWeightRecordsByPatient(patientId);
+        
+        // Sort by creation date to ensure consistent ordering
+        const sortedHistory = weightHistory.sort((a, b) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        
+        console.log(`Patient ${patientId} weight history for dashboard:`, sortedHistory.length, 'records');
+        if (sortedHistory.length > 0) {
+          console.log("Latest record:", sortedHistory[sortedHistory.length - 1]);
+        }
+        return res.json(sortedHistory);
+      }
+      
+      console.log(`Unauthorized access attempt for patient ${patientId}`);
+      console.log("Session exists:", !!req.session);
+      console.log("Patient session exists:", !!req.session?.patientSession);
+      if (req.session?.patientSession) {
+        console.log("Session patient ID:", req.session.patientSession.patient?.id);
+        console.log("Requested patient ID:", patientId);
+      }
+      return res.status(401).json({ message: "Acceso no autorizado" });
+    } catch (error) {
+      console.error("Error fetching patient weight history:", error);
+      res.status(500).json({ message: "Error al obtener historial de peso" });
     }
   });
 

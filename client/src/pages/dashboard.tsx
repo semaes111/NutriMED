@@ -115,17 +115,44 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [patientSession, toast, setLocation]);
 
-  // Fetch patient's weight history
-  const { data: weightHistory } = useQuery({
+  // Fetch patient's weight history with session support
+  const { data: weightHistory, refetch: refetchWeightHistory, isLoading: weightLoading } = useQuery({
     queryKey: ["/api/patient/weight-history", patientSession?.patient?.id],
     queryFn: async () => {
-      if (!patientSession?.patient?.id) return [];
-      const response = await apiRequest("GET", `/api/patient/${patientSession.patient.id}/weight-history`);
-      const data = await response.json();
-      return data || [];
+      if (!patientSession?.patient?.id) {
+        console.log("No patient session found for weight history");
+        return [];
+      }
+      
+      console.log("Fetching weight history for patient:", patientSession.patient.id);
+      try {
+        // Use fetch directly with credentials to ensure session cookies are sent
+        const response = await fetch(`/api/patient/${patientSession.patient.id}/weight-history`, {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache'
+          }
+        });
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("Weight history request failed:", response.status, response.statusText, errorText);
+          return [];
+        }
+        const data = await response.json();
+        console.log("Weight history received:", data);
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Error fetching weight history:", error);
+        return [];
+      }
     },
     enabled: !!patientSession?.patient?.id,
-    retry: false,
+    retry: 2,
+    refetchInterval: 10000, // Refetch every 10 seconds for real-time updates
+    staleTime: 5000, // Consider data stale after 5 seconds
   });
 
   const { data: patient, isLoading, error } = useQuery<PatientInfo>({
@@ -453,8 +480,17 @@ export default function Dashboard() {
                   exists: !!weightHistory,
                   isArray: Array.isArray(weightHistory),
                   length: weightHistory?.length || 0,
+                  patientId: patientSession?.patient?.id,
+                  sessionExists: !!patientSession,
                   data: weightHistory
                 });
+                
+                // Force refetch if we have a patient but no data
+                if (patientSession?.patient?.id && (!weightHistory || weightHistory.length === 0) && !weightLoading) {
+                  console.log("Force refetching weight history...");
+                  refetchWeightHistory();
+                }
+                
                 return weightHistory && Array.isArray(weightHistory) && weightHistory.length > 0;
               })() ? (
                 <div className="relative p-6 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 rounded-xl shadow-2xl overflow-hidden">
@@ -597,8 +633,9 @@ export default function Dashboard() {
                             stroke="url(#weightGradient)"
                             strokeWidth={4}
                             filter="url(#glow)"
-                            dot={({ cx, cy, payload }) => (
+                            dot={({ cx, cy, payload, index }) => (
                               <circle
+                                key={`dot-${index}`}
                                 cx={cx}
                                 cy={cy}
                                 r={8}
