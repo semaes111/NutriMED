@@ -35,6 +35,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [patientSession, setPatientSession] = useState<any>(null);
   const [timeRemaining, setTimeRemaining] = useState<string>("");
+  const [showNutritionalTip, setShowNutritionalTip] = useState(true);
 
   // Check for patient session (access code login)
   useEffect(() => {

@@ -9,6 +9,7 @@ import { RecipeCard } from "@/components/ui/recipe-card";
 import { useToast } from "@/hooks/use-toast";
 import { PatientInfo } from "@/lib/types";
 import { isUnauthorizedError } from "@/lib/authUtils";
+import { AnimatedTipCarousel } from "@/components/ui/animated-tip-carousel";
 import { 
   ArrowLeft, 
   Sun, 
@@ -18,7 +19,11 @@ import {
   Wheat, 
   Drumstick, 
   Apple, 
-  Sprout 
+  Sprout,
+  Coffee,
+  Fish,
+  Carrot,
+  Plus
 } from "lucide-react";
 
 export default function MealPlan() {
@@ -549,6 +554,52 @@ export default function MealPlan() {
       </header>
 
       <main className="max-w-6xl mx-auto px-4 py-8">
+        {/* Contextual Tips for Meal Planning */}
+        <div className="mb-8">
+          <AnimatedTipCarousel
+            tips={[
+              {
+                id: "meal-tip-1",
+                title: "Planificación Inteligente",
+                content: "Organiza tus comidas con anticipación. Esto te ayuda a mantener el control y evitar decisiones impulsivas.",
+                category: "Planificación",
+                icon: <Utensils className="w-5 h-5" />,
+                color: "from-blue-400 to-blue-600",
+                animation: "bounce"
+              },
+              {
+                id: "meal-tip-2", 
+                title: "Variedad Nutricional",
+                content: "Incluye diferentes colores en tu plato. Cada color aporta nutrientes únicos para tu salud.",
+                category: "Nutrición",
+                icon: <Apple className="w-5 h-5" />,
+                color: "from-green-400 to-green-600", 
+                animation: "pulse"
+              },
+              {
+                id: "meal-tip-3",
+                title: "Preparación Saludable", 
+                content: "Prefiere métodos de cocción como vapor, plancha o horno en lugar de frituras.",
+                category: "Cocina",
+                icon: <Coffee className="w-5 h-5" />,
+                color: "from-orange-400 to-orange-600",
+                animation: "spin"
+              },
+              {
+                id: "meal-tip-4",
+                title: "Porciones Adecuadas",
+                content: "Escucha a tu cuerpo. Come hasta sentirte satisfecho, no lleno.",
+                category: "Porciones", 
+                icon: <Wheat className="w-5 h-5" />,
+                color: "from-purple-400 to-purple-600",
+                animation: "slide"
+              }
+            ]}
+            autoPlay={true}
+            interval={6000}
+          />
+        </div>
+        
         {renderContent()}
       </main>
     </div>
