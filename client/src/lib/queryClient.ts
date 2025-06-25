@@ -12,25 +12,12 @@ export async function apiRequest(
   url: string,
   data?: unknown | undefined,
 ): Promise<Response> {
-  const headers: HeadersInit = data ? { "Content-Type": "application/json" } : {};
-  
   // Add patient session header if available
   const patientSession = localStorage.getItem('patientSession');
+  const headers: HeadersInit = data ? { "Content-Type": "application/json" } : {};
+  
   if (patientSession) {
     headers['x-patient-session'] = patientSession;
-  }
-
-  // Add professional authentication header if available
-  const professionalInfo = localStorage.getItem('professionalInfo');
-  if (professionalInfo) {
-    try {
-      const professional = JSON.parse(professionalInfo);
-      if (professional.accessCode) {
-        headers['Authorization'] = `Bearer ${professional.accessCode}`;
-      }
-    } catch (error) {
-      console.error('Error parsing professional info:', error);
-    }
   }
 
   const res = await fetch(url, {
@@ -50,25 +37,12 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const headers: HeadersInit = {};
-    
     // Add patient session header if available
     const patientSession = localStorage.getItem('patientSession');
+    const headers: HeadersInit = {};
+    
     if (patientSession) {
       headers['x-patient-session'] = patientSession;
-    }
-
-    // Add professional authentication header if available
-    const professionalInfo = localStorage.getItem('professionalInfo');
-    if (professionalInfo) {
-      try {
-        const professional = JSON.parse(professionalInfo);
-        if (professional.accessCode) {
-          headers['Authorization'] = `Bearer ${professional.accessCode}`;
-        }
-      } catch (error) {
-        console.error('Error parsing professional info:', error);
-      }
     }
 
     const res = await fetch(queryKey[0] as string, {

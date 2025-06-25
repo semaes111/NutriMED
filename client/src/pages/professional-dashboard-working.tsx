@@ -31,8 +31,7 @@ import {
   Ban,
   AlertTriangle,
   TrendingUp,
-  Settings,
-  Zap
+  Settings
 } from "lucide-react";
 import { 
   LineChart, 
@@ -43,7 +42,6 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from "recharts";
-import { PatientOnboardingWizard } from "@/components/patient-onboarding-wizard";
 
 const addWeightSchema = z.object({
   weight: z.string().min(1, "El peso es requerido")
@@ -106,7 +104,6 @@ export default function ProfessionalDashboardWorking() {
   const [showTargetWeightModal, setShowTargetWeightModal] = useState(false);
   const [showRevokeCodeModal, setShowRevokeCodeModal] = useState(false);
   const [showCreatePatient, setShowCreatePatient] = useState(false);
-  const [showOnboardingWizard, setShowOnboardingWizard] = useState(false);
 
   useEffect(() => {
     console.log('Working Professional Dashboard useEffect triggered');
@@ -130,7 +127,7 @@ export default function ProfessionalDashboardWorking() {
   }, [setLocation]);
 
   // Get all patients
-  const { data: patients, isLoading: isPatientsLoading } = useQuery<any[]>({
+  const { data: patients, isLoading: isPatientsLoading } = useQuery({
     queryKey: ["/api/professional/patients"],
     enabled: !!professionalInfo,
     retry: false,
@@ -458,10 +455,10 @@ export default function ProfessionalDashboardWorking() {
   };
 
   // Filter patients based on search term
-  const filteredPatients = (patients || []).filter((patient: any) =>
+  const filteredPatients = patients?.filter((patient: any) =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.accessCode.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ) || [];
 
   if (!professionalInfo) {
     return (
@@ -653,67 +650,47 @@ export default function ProfessionalDashboardWorking() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                    <Button
-                      onClick={() => setShowOnboardingWizard(true)}
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 text-lg px-8 py-3 shadow-lg"
-                    >
-                      <Zap className="mr-2" size={20} />
-                      Asistente Rápido
-                    </Button>
+                  <div className="text-center">
                     <Button
                       onClick={() => setShowCreatePatient(true)}
-                      variant="outline"
-                      className="border-green-600 text-green-600 hover:bg-green-50 text-lg px-8 py-3"
+                      className="bg-green-600 text-white hover:bg-green-700 text-lg px-8 py-3"
                     >
                       <UserPlus className="mr-2" size={20} />
-                      Formulario Clásico
+                      Crear Nuevo Paciente
                     </Button>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                          <Zap className="text-white" size={20} />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900">Asistente Rápido</h3>
-                      </div>
-                      <div className="space-y-2 text-sm text-gray-700">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <span>Interfaz paso a paso guiada</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                          <span>Validación en tiempo real</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                          <span>Proceso optimizado para rapidez</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-6">
-                      <div className="flex items-center space-x-3 mb-4">
-                        <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
-                          <UserPlus className="text-white" size={20} />
-                        </div>
-                        <h3 className="text-lg font-semibold text-gray-900">Formulario Clásico</h3>
-                      </div>
-                      <div className="space-y-2 text-sm text-gray-700">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+                      Sistema de Gestión de Pacientes
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+                      <div className="space-y-2">
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span>Todos los campos en una vista</span>
+                          <span>Generación automática de códigos de acceso</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span>Ideal para datos complejos</span>
+                          <span>Asignación de niveles de dieta (1-5)</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span>Control total del proceso</span>
+                          <span>Configuración de peso objetivo</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Validación de datos médicos</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Códigos válidos por 30 días</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Seguimiento automático de progreso</span>
                         </div>
                       </div>
                     </div>
@@ -1487,11 +1464,11 @@ export default function ProfessionalDashboardWorking() {
                           className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
                         >
                           <option value="">Seleccionar nivel de dieta...</option>
-                          <option value="1">Nivel 1 - Dieta Básica</option>
-                          <option value="2">Nivel 2 - Dieta Intermedia</option>
-                          <option value="3">Nivel 3 - Dieta Avanzada</option>
-                          <option value="4">Nivel 4 - Dieta Restrictiva</option>
-                          <option value="5">Nivel 5 - Dieta Muy Restrictiva</option>
+                          {dietLevels?.map((level: any) => (
+                            <option key={level.id} value={level.level.toString()}>
+                              Nivel {level.level} - {level.name}
+                            </option>
+                          ))}
                         </select>
                       </FormControl>
                       <FormMessage />
@@ -1559,27 +1536,6 @@ export default function ProfessionalDashboardWorking() {
                 </div>
               </form>
             </Form>
-          </DialogContent>
-        </Dialog>
-
-        {/* Patient Onboarding Wizard */}
-        <Dialog open={showOnboardingWizard} onOpenChange={setShowOnboardingWizard}>
-          <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto p-0">
-            <DialogHeader className="sr-only">
-              <DialogTitle>Asistente de Registro de Pacientes</DialogTitle>
-            </DialogHeader>
-            <PatientOnboardingWizard
-              onComplete={(patient, accessCode) => {
-                setShowOnboardingWizard(false);
-                // Optionally show the created patient details
-                toast({
-                  title: "¡Proceso Completado!",
-                  description: `Paciente ${patient.name} creado con código ${accessCode}`,
-                  duration: 8000,
-                });
-              }}
-              onCancel={() => setShowOnboardingWizard(false)}
-            />
           </DialogContent>
         </Dialog>
       </div>

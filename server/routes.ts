@@ -4,7 +4,6 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { insertPatientSchema, insertWeightRecordSchema, insertProfessionalSchema } from "@shared/schema";
 import { z } from "zod";
-import "./types"; // Import session type definitions
 
 const accessCodeSchema = z.object({
   accessCode: z.string().min(6).max(20),
@@ -26,54 +25,12 @@ function generateAccessCode(): string {
 // Patient authentication middleware
 const isPatientAuthenticated = (req: any, res: any, next: any) => {
   // Check for active patient session
-  if (req.session?.patientSession?.patient?.id) {
+  if (req.patientSession?.patient?.id) {
     return next();
   }
   
   // If no session, return unauthorized
   return res.status(401).json({ message: "Unauthorized" });
-};
-
-// Professional authentication middleware with enhanced session handling
-const isProfessionalAuthenticated = async (req: any, res: any, next: any) => {
-  try {
-    console.log("Professional auth check - Headers:", req.headers.authorization ? "Authorization header present" : "No authorization header");
-    console.log("Professional auth check - Session data:", req.session?.professionalData ? "Session data present" : "No session data");
-    
-    // Check for Authorization header with professional code
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const professionalCode = authHeader.substring(7);
-      console.log("Professional auth - Code from header:", professionalCode);
-      if (professionalCode === 'PROF2025') {
-        // Validate professional exists in database
-        const professional = await storage.getProfessionalByAccessCode(professionalCode);
-        if (professional && professional.isActive) {
-          console.log("Professional auth - SUCCESS via Authorization header");
-          req.professionalData = professional;
-          return next();
-        }
-      }
-    }
-    
-    // Check for professional session
-    if (req.session?.professionalData) {
-      console.log("Professional auth - SUCCESS via session");
-      return next();
-    }
-    
-    // Check for Replit authentication
-    if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
-      console.log("Professional auth - SUCCESS via Replit auth");
-      return next();
-    }
-    
-    console.log("Professional auth - FAILED - No valid authentication found");
-    return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
-  } catch (error) {
-    console.error("Professional authentication error:", error);
-    return res.status(500).json({ message: "Error de autenticación" });
-  }
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -176,9 +133,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get diet levels - uses professional auth middleware
-  app.get("/api/diet-levels", isProfessionalAuthenticated, async (req: any, res) => {
+  // Get diet levels - supports both auth types
+  app.get("/api/diet-levels", async (req: any, res) => {
     try {
+      // Check for professional session or Replit auth
+      const hasSessionAuth = req.session?.professionalData;
+      const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
+      
+      if (!hasSessionAuth && !hasReplitAuth) {
+        return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación" });
+      }
+      
+      console.log("Diet levels request - Auth type:", hasSessionAuth ? 'session' : 'replit');
+      
       const dietLevels = await storage.getDietLevels();
       res.json(dietLevels);
     } catch (error) {
@@ -268,6 +235,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Patient validation successful");
       
+      // Initialize session if it doesn't exist
+      if (!req.session) {
+        req.session = {};
+      }
+      
       // Create patient session for dashboard access
       req.session.patientSession = {
         patient: {
@@ -282,7 +254,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           targetWeight: patient.targetWeight,
           medicalNotes: patient.medicalNotes
         },
-        loginTime: new Date().toISOString()
+        loginTime: new Date()
       };
 
       console.log("Patient session created for dashboard access:", req.session.patientSession);
@@ -387,8 +359,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Código profesional no válido" });
       }
       
-      // Create professional session data directly
-      const professionalSession = {
+      // Initialize session if it doesn't exist
+      if (!req.session) {
+        req.session = {};
+      }
+      
+      // Create professional session data
+      req.session.professionalData = {
         id: professional.id,
         name: professional.name,
         specialty: professional.specialty,
@@ -398,13 +375,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         loginTime: new Date().toISOString()
       };
       
-      // Store in session
-      (req.session as any).professionalData = professionalSession;
+      console.log("Professional session data set:", req.session.professionalData);
       
-      console.log("Professional session data set:", professionalSession);
-      console.log("Session ID:", req.sessionID);
-      
-      // Force session save
+      // Force session save with callback
       req.session.save((err: any) => {
         if (err) {
           console.error('Session save error:', err);
@@ -412,7 +385,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         console.log('Professional session saved successfully');
-        console.log('Session ID after save:', req.sessionID);
         
         res.json({
           valid: true,
@@ -476,13 +448,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Create new patient - uses professional auth middleware
-  app.post("/api/professional/patients", isProfessionalAuthenticated, async (req: any, res) => {
+  // Create new patient - supports both auth types
+  app.post("/api/professional/patients", async (req: any, res) => {
     try {
-      console.log("Patient creation request received");
-      console.log("Session exists:", !!req.session);
-      console.log("Professional data in session:", !!(req.session as any)?.professionalData);
-      console.log("Request body:", req.body);
+      // Check for professional session first
+      const hasSessionAuth = req.session?.professionalData;
+      const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
+      
+      if (!hasSessionAuth && !hasReplitAuth) {
+        return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
+      }
 
       // Generate access code and set expiry
       const accessCode = generateAccessCode();
@@ -505,7 +480,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log("Creating patient with data:", patientData);
       const newPatient = await storage.createPatient(patientData);
-      console.log("Patient created successfully:", newPatient);
 
       res.json({
         patient: newPatient,
@@ -519,11 +493,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all patients for professional - uses professional auth middleware
-  app.get("/api/professional/patients", isProfessionalAuthenticated, async (req: any, res) => {
+  // Get all patients for professional - supports both auth types
+  app.get("/api/professional/patients", async (req: any, res) => {
     try {
-      const patients = await storage.getAllPatients();
-      res.json(patients);
+      // Check for professional session first
+      if (req.session?.professionalData) {
+        console.log("Professional patients request via session");
+        const patients = await storage.getAllPatients();
+        return res.json(patients);
+      }
+      
+      // Fallback to Replit auth
+      if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
+        const userId = req.user.claims.sub;
+        const professional = await storage.getProfessionalByUserId(userId);
+        
+        if (professional) {
+          const patients = await storage.getAllPatients();
+          return res.json(patients);
+        }
+      }
+      
+      return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
     } catch (error) {
       console.error("Error fetching patients:", error);
       res.status(500).json({ message: "Error interno del servidor" });
