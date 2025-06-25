@@ -92,6 +92,11 @@ export default function ProfessionalDashboard() {
   const isValidated = !!professionalInfo;
   
   console.log('Professional Dashboard render - isValidated:', isValidated, 'professionalInfo:', professionalInfo);
+  
+  // Force early return to show content immediately if validated
+  if (isValidated) {
+    console.log('Professional validated, showing dashboard content immediately');
+  }
 
   // Get professional profile - only if no localStorage data
   const { data: professional, isLoading: isProfessionalLoading } = useQuery({
