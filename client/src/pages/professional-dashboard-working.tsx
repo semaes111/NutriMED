@@ -31,7 +31,8 @@ import {
   Ban,
   AlertTriangle,
   TrendingUp,
-  Settings
+  Settings,
+  Zap
 } from "lucide-react";
 import { 
   LineChart, 
@@ -42,6 +43,7 @@ import {
   Tooltip, 
   ResponsiveContainer 
 } from "recharts";
+import { PatientOnboardingWizard } from "@/components/patient-onboarding-wizard";
 
 const addWeightSchema = z.object({
   weight: z.string().min(1, "El peso es requerido")
