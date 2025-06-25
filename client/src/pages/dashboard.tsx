@@ -514,8 +514,12 @@ export default function Dashboard() {
                           data={(() => {
                             if (!weightHistory || weightHistory.length === 0) return [];
                             
-                            return weightHistory
-                              .sort((a, b) => new Date(a.recordedDate || a.createdAt).getTime() - new Date(b.recordedDate || b.createdAt).getTime())
+                            const sortedData = weightHistory
+                              .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+                            
+                            console.log("Chart data sorted by createdAt:", sortedData.map(r => ({ id: r.id, weight: r.weight, createdAt: r.createdAt })));
+                            
+                            return sortedData
                               .map((record, index, arr) => {
                                 const weight = parseFloat(record.weight);
                                 const prevWeight = index > 0 ? parseFloat(arr[index - 1].weight) : weight;
@@ -523,14 +527,15 @@ export default function Dashboard() {
                                 const isEqual = weight === prevWeight;
                                 
                                 return {
-                                  date: new Date(record.recordedDate || record.createdAt).toLocaleDateString('es-ES', { 
+                                  date: new Date(record.createdAt).toLocaleDateString('es-ES', { 
                                     day: '2-digit', 
                                     month: '2-digit' 
                                   }),
                                   weight: weight,
                                   color: isEqual ? '#fbbf24' : (isImprovement ? '#10b981' : '#ef4444'),
                                   trend: isEqual ? 'igual' : (isImprovement ? 'mejora' : 'retroceso'),
-                                  change: index > 0 ? (weight - prevWeight).toFixed(1) : '0.0'
+                                  change: index > 0 ? (weight - prevWeight).toFixed(1) : '0.0',
+                                  recordId: record.id
                                 };
                               });
                           })()}
