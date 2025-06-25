@@ -136,11 +136,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get diet levels - supports both auth types
   app.get("/api/diet-levels", async (req: any, res) => {
     try {
+      console.log("Diet levels request - Session ID:", req.sessionID);
+      console.log("Session exists:", !!req.session);
+      console.log("Professional data exists:", !!req.session?.professionalData);
+      
       // Check for professional session or Replit auth
       const hasSessionAuth = req.session?.professionalData;
       const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
       
+      console.log("Diet levels - Session auth:", hasSessionAuth);
+      console.log("Diet levels - Replit auth:", hasReplitAuth);
+      
       if (!hasSessionAuth && !hasReplitAuth) {
+        console.log("Diet levels request - Authentication failed");
         return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación" });
       }
       
@@ -507,9 +515,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all patients for professional - supports both auth types
   app.get("/api/professional/patients", async (req: any, res) => {
     try {
+      console.log("Professional patients request - Session ID:", req.sessionID);
+      console.log("Session exists:", !!req.session);
+      console.log("Professional data exists:", !!req.session?.professionalData);
+      console.log("Professional data:", req.session?.professionalData);
+      
       // Check for professional session first
       if (req.session?.professionalData) {
-        console.log("Professional patients request via session");
+        console.log("Professional patients request via session - authenticated");
         const patients = await storage.getAllPatients();
         return res.json(patients);
       }
@@ -525,6 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      console.log("Professional patients request - Authentication failed");
       return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
     } catch (error) {
       console.error("Error fetching patients:", error);
