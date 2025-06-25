@@ -352,6 +352,8 @@ export default function ProfessionalDashboardWorking() {
     revokeCodeMutation.mutate();
   };
 
+
+
   // Create patient mutation
   const createPatientMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -455,10 +457,10 @@ export default function ProfessionalDashboardWorking() {
   };
 
   // Filter patients based on search term
-  const filteredPatients = patients?.filter((patient: any) =>
+  const filteredPatients = Array.isArray(patients) ? patients.filter((patient: any) =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.accessCode.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  ) : [];
 
   if (!professionalInfo) {
     return (
@@ -1443,6 +1445,209 @@ export default function ProfessionalDashboardWorking() {
                             type="number"
                             step="0.1"
                             placeholder="Ej: 65.0"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={createPatientForm.control}
+                  name="dietLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nivel de Dieta *</FormLabel>
+                      <FormControl>
+                        <select 
+                          {...field} 
+                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        >
+                          <option value="">Seleccionar nivel de dieta...</option>
+                          {dietLevels?.map((level: any) => (
+                            <option key={level.id} value={level.level.toString()}>
+                              Nivel {level.level} - {level.name}
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={createPatientForm.control}
+                  name="medicalNotes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notas Médicas (opcional)</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Observaciones médicas, alergias, condiciones especiales..."
+                          rows={3}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 text-blue-800 mb-2">
+                    <RefreshCw className="text-blue-600" size={16} />
+                    <span className="font-medium">Generación Automática de Código</span>
+                  </div>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• Se generará automáticamente un código de acceso único</li>
+                    <li>• El código será válido por 30 días desde la fecha de creación</li>
+                    <li>• El paciente podrá usar este código para acceder a su plan nutricional</li>
+                    <li>• Podrás renovar o modificar el código en cualquier momento</li>
+                  </ul>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCreatePatient(false)}
+                    disabled={createPatientMutation.isPending}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createPatientMutation.isPending}
+                    className="bg-green-600 text-white hover:bg-green-700"
+                  >
+                    {createPatientMutation.isPending ? (
+                      <>
+                        <RefreshCw className="animate-spin mr-2" size={16} />
+                        Creando Paciente...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="mr-2" size={16} />
+                        Crear Paciente
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Patient Modal */}
+        <Dialog open={showCreatePatient} onOpenChange={setShowCreatePatient}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <UserPlus className="text-green-600" size={24} />
+                <span>Crear Nuevo Paciente</span>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <Form {...createPatientForm}>
+              <form onSubmit={createPatientForm.handleSubmit(onSubmitCreatePatient)} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={createPatientForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nombre Completo *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Ej: Juan Pérez García"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={createPatientForm.control}
+                    name="age"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Edad *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            placeholder="Ej: 35"
+                            min="1"
+                            max="120"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={createPatientForm.control}
+                    name="height"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Altura (cm) *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.1"
+                            placeholder="Ej: 170"
+                            min="50"
+                            max="250"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={createPatientForm.control}
+                    name="initialWeight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Peso Inicial (kg) *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.1"
+                            placeholder="Ej: 75.5"
+                            min="10"
+                            max="500"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={createPatientForm.control}
+                    name="targetWeight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Peso Objetivo (kg) *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            step="0.1"
+                            placeholder="Ej: 70.0"
+                            min="10"
+                            max="500"
                             {...field} 
                           />
                         </FormControl>
