@@ -104,6 +104,7 @@ export default function ProfessionalDashboardWorking() {
   const [showTargetWeightModal, setShowTargetWeightModal] = useState(false);
   const [showRevokeCodeModal, setShowRevokeCodeModal] = useState(false);
   const [showCreatePatient, setShowCreatePatient] = useState(false);
+  const [showOnboardingWizard, setShowOnboardingWizard] = useState(false);
 
   useEffect(() => {
     console.log('Working Professional Dashboard useEffect triggered');
@@ -650,47 +651,67 @@ export default function ProfessionalDashboardWorking() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-6">
-                  <div className="text-center">
+                  <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <Button
+                      onClick={() => setShowOnboardingWizard(true)}
+                      className="bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 text-lg px-8 py-3 shadow-lg"
+                    >
+                      <Zap className="mr-2" size={20} />
+                      Asistente Rápido
+                    </Button>
                     <Button
                       onClick={() => setShowCreatePatient(true)}
-                      className="bg-green-600 text-white hover:bg-green-700 text-lg px-8 py-3"
+                      variant="outline"
+                      className="border-green-600 text-green-600 hover:bg-green-50 text-lg px-8 py-3"
                     >
                       <UserPlus className="mr-2" size={20} />
-                      Crear Nuevo Paciente
+                      Formulario Clásico
                     </Button>
                   </div>
                   
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
-                      Sistema de Gestión de Pacientes
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
-                      <div className="space-y-2">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-6">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                          <Zap className="text-white" size={20} />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Asistente Rápido</h3>
+                      </div>
+                      <div className="space-y-2 text-sm text-gray-700">
                         <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span>Generación automática de códigos de acceso</span>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span>Interfaz paso a paso guiada</span>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span>Asignación de niveles de dieta (1-5)</span>
+                          <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+                          <span>Validación en tiempo real</span>
                         </div>
                         <div className="flex items-center space-x-2">
-                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span>Configuración de peso objetivo</span>
+                          <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                          <span>Proceso optimizado para rapidez</span>
                         </div>
                       </div>
-                      <div className="space-y-2">
+                    </div>
+
+                    <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+                      <div className="flex items-center space-x-3 mb-4">
+                        <div className="w-10 h-10 bg-green-600 rounded-full flex items-center justify-center">
+                          <UserPlus className="text-white" size={20} />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">Formulario Clásico</h3>
+                      </div>
+                      <div className="space-y-2 text-sm text-gray-700">
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span>Validación de datos médicos</span>
+                          <span>Todos los campos en una vista</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span>Códigos válidos por 30 días</span>
+                          <span>Ideal para datos complejos</span>
                         </div>
                         <div className="flex items-center space-x-2">
                           <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                          <span>Seguimiento automático de progreso</span>
+                          <span>Control total del proceso</span>
                         </div>
                       </div>
                     </div>
@@ -1536,6 +1557,24 @@ export default function ProfessionalDashboardWorking() {
                 </div>
               </form>
             </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Patient Onboarding Wizard */}
+        <Dialog open={showOnboardingWizard} onOpenChange={setShowOnboardingWizard}>
+          <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto p-0">
+            <PatientOnboardingWizard
+              onComplete={(patient, accessCode) => {
+                setShowOnboardingWizard(false);
+                // Optionally show the created patient details
+                toast({
+                  title: "¡Proceso Completado!",
+                  description: `Paciente ${patient.name} creado con código ${accessCode}`,
+                  duration: 8000,
+                });
+              }}
+              onCancel={() => setShowOnboardingWizard(false)}
+            />
           </DialogContent>
         </Dialog>
       </div>
