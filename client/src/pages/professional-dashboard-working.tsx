@@ -130,7 +130,7 @@ export default function ProfessionalDashboardWorking() {
   }, [setLocation]);
 
   // Get all patients
-  const { data: patients, isLoading: isPatientsLoading } = useQuery({
+  const { data: patients, isLoading: isPatientsLoading } = useQuery<any[]>({
     queryKey: ["/api/professional/patients"],
     enabled: !!professionalInfo,
     retry: false,
@@ -458,10 +458,10 @@ export default function ProfessionalDashboardWorking() {
   };
 
   // Filter patients based on search term
-  const filteredPatients = patients?.filter((patient: any) =>
+  const filteredPatients = (patients || []).filter((patient: any) =>
     patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     patient.accessCode.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+  );
 
   if (!professionalInfo) {
     return (
