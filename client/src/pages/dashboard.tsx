@@ -127,7 +127,7 @@ export default function Dashboard() {
       console.log("Fetching weight history for patient:", patientSession.patient.id);
       try {
         // Use fetch directly with credentials to ensure session cookies are sent
-        const response = await fetch(`/api/patient/${patientSession.patient.id}/weight-history`, {
+        const response = await fetch(`/api/weight-history/${patientSession.patient.id}`, {
           method: 'GET',
           credentials: 'include',
           headers: {

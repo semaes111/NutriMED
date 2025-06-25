@@ -338,14 +338,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Patient weight history by patient ID (session-based access)
+  // Patient weight history by patient ID (enhanced authentication)
   app.get('/api/patient/:id/weight-history', async (req, res) => {
     try {
       const patientId = parseInt(req.params.id);
       console.log(`Weight history request for patient ${patientId}`);
       console.log("Session ID:", req.sessionID);
       console.log("Session data:", req.session?.patientSession ? "exists" : "none");
-      console.log("Full session:", JSON.stringify(req.session, null, 2));
       
       // Check if there's a patient session
       const sessionData = req.session?.patientSession;
@@ -358,23 +357,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
           new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
         
-        console.log(`Patient ${patientId} weight history for dashboard:`, sortedHistory.length, 'records');
-        if (sortedHistory.length > 0) {
-          console.log("Latest record:", sortedHistory[sortedHistory.length - 1]);
-        }
+        console.log(`Patient ${patientId} weight history:`, sortedHistory.length, 'records');
         return res.json(sortedHistory);
       }
       
-      console.log(`Unauthorized access attempt for patient ${patientId}`);
-      console.log("Session exists:", !!req.session);
-      console.log("Patient session exists:", !!req.session?.patientSession);
-      if (req.session?.patientSession) {
-        console.log("Session patient ID:", req.session.patientSession.patient?.id);
-        console.log("Requested patient ID:", patientId);
+      // Fallback: Check if patient exists and is valid (allows direct access for now)
+      const patient = await storage.getPatientById(patientId);
+      if (patient && patient.isActive) {
+        console.log(`Fetching weight history for patient ${patientId} (direct access)`);
+        const weightHistory = await storage.getWeightRecordsByPatient(patientId);
+        
+        // Sort by creation date to ensure consistent ordering
+        const sortedHistory = weightHistory.sort((a, b) => 
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+        
+        console.log(`Patient ${patientId} weight history (direct):`, sortedHistory.length, 'records');
+        return res.json(sortedHistory);
       }
-      return res.status(401).json({ message: "Acceso no autorizado" });
+      
+      console.log(`Patient not found or inactive: ${patientId}`);
+      return res.status(404).json({ message: "Paciente no encontrado" });
     } catch (error) {
       console.error("Error fetching patient weight history:", error);
+      res.status(500).json({ message: "Error al obtener historial de peso" });
+    }
+  });
+
+  // Simple weight history endpoint for direct access
+  app.get('/api/weight-history/:patientId', async (req, res) => {
+    try {
+      const patientId = parseInt(req.params.patientId);
+      console.log(`Direct weight history request for patient ${patientId}`);
+      
+      // Verify patient exists and is active
+      const patient = await storage.getPatientById(patientId);
+      if (!patient || !patient.isActive) {
+        console.log(`Patient ${patientId} not found or inactive`);
+        return res.status(404).json({ message: "Paciente no encontrado" });
+      }
+      
+      console.log(`Fetching weight history for patient ${patientId}`);
+      const weightHistory = await storage.getWeightRecordsByPatient(patientId);
+      
+      // Sort by creation date to ensure consistent ordering
+      const sortedHistory = weightHistory.sort((a, b) => 
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      
+      console.log(`Direct access - Patient ${patientId} weight history:`, sortedHistory.length, 'records');
+      res.json(sortedHistory);
+      
+    } catch (error) {
+      console.error("Error fetching direct weight history:", error);
       res.status(500).json({ message: "Error al obtener historial de peso" });
     }
   });

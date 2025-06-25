@@ -154,10 +154,19 @@ export default function ProfessionalDashboardWorking() {
 
   // Get weight history for selected patient
   const { data: weightHistory, refetch: refetchWeight } = useQuery({
-    queryKey: ["/api/professional/patients", selectedPatient?.id, "weight-history"],
+    queryKey: ["/api/weight-history", selectedPatient?.id],
     queryFn: async () => {
       if (!selectedPatient?.id) return [];
-      const response = await apiRequest("GET", `/api/professional/patients/${selectedPatient.id}/weight-history`);
+      const response = await fetch(`/api/weight-history/${selectedPatient.id}`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
       const data = await response.json();
       return data;
     },
