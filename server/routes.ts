@@ -37,14 +37,19 @@ const isPatientAuthenticated = (req: any, res: any, next: any) => {
 // Professional authentication middleware with enhanced session handling
 const isProfessionalAuthenticated = async (req: any, res: any, next: any) => {
   try {
+    console.log("Professional auth check - Headers:", req.headers.authorization ? "Authorization header present" : "No authorization header");
+    console.log("Professional auth check - Session data:", req.session?.professionalData ? "Session data present" : "No session data");
+    
     // Check for Authorization header with professional code
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const professionalCode = authHeader.substring(7);
+      console.log("Professional auth - Code from header:", professionalCode);
       if (professionalCode === 'PROF2025') {
         // Validate professional exists in database
         const professional = await storage.getProfessionalByAccessCode(professionalCode);
         if (professional && professional.isActive) {
+          console.log("Professional auth - SUCCESS via Authorization header");
           req.professionalData = professional;
           return next();
         }
@@ -53,14 +58,17 @@ const isProfessionalAuthenticated = async (req: any, res: any, next: any) => {
     
     // Check for professional session
     if (req.session?.professionalData) {
+      console.log("Professional auth - SUCCESS via session");
       return next();
     }
     
     // Check for Replit authentication
     if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
+      console.log("Professional auth - SUCCESS via Replit auth");
       return next();
     }
     
+    console.log("Professional auth - FAILED - No valid authentication found");
     return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
   } catch (error) {
     console.error("Professional authentication error:", error);
