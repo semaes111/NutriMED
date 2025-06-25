@@ -27,12 +27,27 @@ import {
   Weight,
   Plus,
   Calendar,
-  RefreshCw
+  RefreshCw,
+  TrendingUp,
+  Settings
 } from "lucide-react";
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer 
+} from "recharts";
 
 const addWeightSchema = z.object({
   weight: z.string().min(1, "El peso es requerido"),
   notes: z.string().optional(),
+});
+
+const changeDietSchema = z.object({
+  dietLevel: z.string().min(1, "El nivel de dieta es requerido"),
 });
 
 export default function ProfessionalDashboardWorking() {
@@ -45,6 +60,7 @@ export default function ProfessionalDashboardWorking() {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showAddWeight, setShowAddWeight] = useState(false);
   const [showPatientDetail, setShowPatientDetail] = useState(false);
+  const [showChangeDiet, setShowChangeDiet] = useState(false);
 
   useEffect(() => {
     console.log('Working Professional Dashboard useEffect triggered');
@@ -130,6 +146,64 @@ export default function ProfessionalDashboardWorking() {
 
   const onSubmitWeight = (data: any) => {
     addWeightMutation.mutate(data);
+  };
+
+  // Change diet level mutation
+  const changeDietMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("PATCH", `/api/professional/patients/${selectedPatient.id}/diet-level`, {
+        dietLevel: parseInt(data.dietLevel),
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      console.log("Diet level changed successfully:", data);
+      toast({
+        title: "Nivel de dieta actualizado",
+        description: `El nivel de dieta se cambió exitosamente a nivel ${data.dietLevel}`,
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/professional/patients"] });
+      setShowChangeDiet(false);
+      changeDietForm.reset();
+      setSelectedPatient({ ...selectedPatient, dietLevel: data.dietLevel });
+    },
+    onError: (error: any) => {
+      console.error("Error changing diet level:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Error al cambiar el nivel de dieta",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Form for changing diet level
+  const changeDietForm = useForm({
+    resolver: zodResolver(changeDietSchema),
+    defaultValues: {
+      dietLevel: selectedPatient?.dietLevel?.toString() || "",
+    },
+  });
+
+  const onSubmitDietChange = (data: any) => {
+    changeDietMutation.mutate(data);
+  };
+
+  // Format weight data for chart
+  const formatWeightDataForChart = (data: any[]) => {
+    if (!data || data.length === 0) return [];
+    
+    return data
+      .map((record) => ({
+        date: new Date(record.recordedDate).toLocaleDateString('es-ES', { 
+          day: '2-digit', 
+          month: '2-digit' 
+        }),
+        weight: parseFloat(record.weight),
+        fullDate: record.recordedDate,
+      }))
+      .sort((a, b) => new Date(a.fullDate).getTime() - new Date(b.fullDate).getTime())
+      .slice(-10); // Show last 10 records
   };
 
   const handleLogout = () => {
@@ -439,7 +513,21 @@ export default function ProfessionalDashboardWorking() {
                   
                   <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                     <h4 className="font-medium text-orange-800 mb-1">Nivel de Dieta</h4>
-                    <p className="text-lg font-bold text-orange-700">{selectedPatient.dietLevel}</p>
+                    <div className="flex items-center justify-between">
+                      <p className="text-lg font-bold text-orange-700">{selectedPatient.dietLevel}</p>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          changeDietForm.setValue("dietLevel", selectedPatient.dietLevel?.toString() || "");
+                          setShowChangeDiet(true);
+                        }}
+                        className="flex items-center space-x-1"
+                      >
+                        <Settings size={14} />
+                        <span>Cambiar</span>
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
@@ -459,38 +547,87 @@ export default function ProfessionalDashboardWorking() {
                     </Button>
                   </div>
 
-                  {/* Weight History */}
+                  {/* Weight Evolution Chart */}
                   <Card>
                     <CardHeader>
-                      <CardTitle className="text-base">Historial de Peso</CardTitle>
+                      <CardTitle className="text-base flex items-center space-x-2">
+                        <TrendingUp className="text-blue-600" size={20} />
+                        <span>Evolución del Peso</span>
+                      </CardTitle>
                     </CardHeader>
                     <CardContent>
                       {weightHistory && weightHistory.length > 0 ? (
-                        <div className="space-y-3">
-                          {weightHistory.slice(0, 5).map((record: any, index: number) => (
-                            <div key={record.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                  <Weight className="text-green-600" size={14} />
+                        <div className="space-y-6">
+                          {/* Chart */}
+                          <div className="h-64">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <LineChart data={formatWeightDataForChart(weightHistory)}>
+                                <CartesianGrid strokeDasharray="3 3" />
+                                <XAxis 
+                                  dataKey="date" 
+                                  tick={{ fontSize: 12 }}
+                                  angle={-45}
+                                  textAnchor="end"
+                                  height={60}
+                                />
+                                <YAxis 
+                                  domain={['dataMin - 2', 'dataMax + 2']} 
+                                  tick={{ fontSize: 12 }}
+                                  label={{ value: 'Peso (kg)', angle: -90, position: 'insideLeft' }}
+                                />
+                                <Tooltip 
+                                  formatter={(value, name) => [
+                                    `${Number(value).toFixed(1)} kg`, 
+                                    'Peso'
+                                  ]}
+                                  labelFormatter={(label) => `Fecha: ${label}`}
+                                  contentStyle={{
+                                    backgroundColor: 'white',
+                                    border: '1px solid #e5e7eb',
+                                    borderRadius: '6px'
+                                  }}
+                                />
+                                <Line 
+                                  type="monotone" 
+                                  dataKey="weight" 
+                                  stroke="#10b981" 
+                                  strokeWidth={3}
+                                  dot={{ fill: '#10b981', strokeWidth: 2, r: 6 }}
+                                />
+                              </LineChart>
+                            </ResponsiveContainer>
+                          </div>
+                          
+                          {/* Recent records list */}
+                          <div>
+                            <h4 className="font-medium text-gray-900 mb-3">Registros Recientes</h4>
+                            <div className="space-y-2">
+                              {weightHistory.slice(0, 3).map((record: any) => (
+                                <div key={record.id} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                                  <div className="flex items-center space-x-3">
+                                    <div className="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center">
+                                      <Weight className="text-green-600" size={12} />
+                                    </div>
+                                    <div>
+                                      <p className="font-medium text-gray-900 text-sm">{record.weight} kg</p>
+                                      <p className="text-xs text-gray-500">
+                                        {new Date(record.recordedDate).toLocaleDateString('es-ES')} - {new Date(record.recordedDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {record.notes && (
+                                    <div className="text-xs text-gray-600 max-w-xs">
+                                      {record.notes}
+                                    </div>
+                                  )}
                                 </div>
-                                <div>
-                                  <p className="font-medium text-gray-900">{record.weight} kg</p>
-                                  <p className="text-sm text-gray-500">
-                                    {new Date(record.recordedDate).toLocaleDateString('es-ES')} - {new Date(record.recordedDate).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
-                                  </p>
-                                </div>
-                              </div>
-                              {record.notes && (
-                                <div className="text-sm text-gray-600 max-w-xs">
-                                  {record.notes}
-                                </div>
-                              )}
+                              ))}
                             </div>
-                          ))}
+                          </div>
                         </div>
                       ) : (
                         <div className="text-center py-6">
-                          <Weight className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <TrendingUp className="w-12 h-12 text-gray-400 mx-auto mb-3" />
                           <p className="text-gray-600">No hay registros de peso</p>
                           <Button
                             onClick={() => setShowAddWeight(true)}
@@ -617,6 +754,92 @@ export default function ProfessionalDashboardWorking() {
                       <>
                         <Weight className="mr-2" size={16} />
                         Registrar Peso
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Change Diet Level Modal */}
+        <Dialog open={showChangeDiet} onOpenChange={setShowChangeDiet}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <Settings className="text-orange-600" size={24} />
+                <span>Cambiar Nivel de Dieta</span>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <Form {...changeDietForm}>
+              <form onSubmit={changeDietForm.handleSubmit(onSubmitDietChange)} className="space-y-4">
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+                  <h4 className="font-medium text-orange-800 mb-2">Paciente: {selectedPatient?.name}</h4>
+                  <div className="text-sm">
+                    <span className="text-orange-600">Nivel actual:</span>
+                    <p className="font-bold text-orange-800">Nivel {selectedPatient?.dietLevel}</p>
+                  </div>
+                </div>
+
+                <FormField
+                  control={changeDietForm.control}
+                  name="dietLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nuevo Nivel de Dieta</FormLabel>
+                      <FormControl>
+                        <select 
+                          {...field} 
+                          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        >
+                          <option value="">Seleccionar nivel...</option>
+                          {[1, 2, 3, 4, 5].map((level) => (
+                            <option key={level} value={level.toString()}>
+                              Nivel {level}
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="flex items-center space-x-2 text-blue-800">
+                    <Settings className="text-blue-600" size={16} />
+                    <span className="font-medium">Cambio de Plan Nutricional</span>
+                  </div>
+                  <p className="text-sm text-blue-700 mt-1">
+                    El cambio de nivel de dieta se aplicará inmediatamente y el paciente tendrá acceso a las nuevas recomendaciones nutricionales.
+                  </p>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowChangeDiet(false)}
+                    disabled={changeDietMutation.isPending}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={changeDietMutation.isPending}
+                    className="bg-orange-600 text-white hover:bg-orange-700"
+                  >
+                    {changeDietMutation.isPending ? (
+                      <>
+                        <RefreshCw className="animate-spin mr-2" size={16} />
+                        Cambiando...
+                      </>
+                    ) : (
+                      <>
+                        <Settings className="mr-2" size={16} />
+                        Cambiar Nivel
                       </>
                     )}
                   </Button>
