@@ -64,6 +64,32 @@ const targetWeightSchema = z.object({
     }, "Peso debe estar entre 10 y 500 kg")
 });
 
+const createPatientSchema = z.object({
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+  age: z.string().min(1, "La edad es requerida")
+    .refine((val) => {
+      const num = parseInt(val);
+      return !isNaN(num) && num >= 1 && num <= 120;
+    }, "Edad debe estar entre 1 y 120 años"),
+  height: z.string().min(1, "La estatura es requerida")
+    .refine((val) => {
+      const num = parseFloat(val);
+      return !isNaN(num) && num >= 50 && num <= 250;
+    }, "Estatura debe estar entre 50 y 250 cm"),
+  initialWeight: z.string().min(1, "El peso inicial es requerido")
+    .refine((val) => {
+      const num = parseFloat(val);
+      return !isNaN(num) && num >= 10 && num <= 500;
+    }, "Peso inicial debe estar entre 10 y 500 kg"),
+  targetWeight: z.string().min(1, "El peso objetivo es requerido")
+    .refine((val) => {
+      const num = parseFloat(val);
+      return !isNaN(num) && num >= 10 && num <= 500;
+    }, "Peso objetivo debe estar entre 10 y 500 kg"),
+  dietLevel: z.string().min(1, "El nivel de dieta es requerido"),
+  medicalNotes: z.string().optional(),
+});
+
 export default function ProfessionalDashboardWorking() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
@@ -77,6 +103,7 @@ export default function ProfessionalDashboardWorking() {
   const [showChangeDiet, setShowChangeDiet] = useState(false);
   const [showTargetWeightModal, setShowTargetWeightModal] = useState(false);
   const [showRevokeCodeModal, setShowRevokeCodeModal] = useState(false);
+  const [showCreatePatient, setShowCreatePatient] = useState(false);
 
   useEffect(() => {
     console.log('Working Professional Dashboard useEffect triggered');
@@ -325,6 +352,70 @@ export default function ProfessionalDashboardWorking() {
     revokeCodeMutation.mutate();
   };
 
+  // Create patient mutation
+  const createPatientMutation = useMutation({
+    mutationFn: async (data: any) => {
+      const response = await apiRequest("POST", "/api/professional/patients", {
+        name: data.name,
+        age: parseInt(data.age),
+        height: parseFloat(data.height),
+        initialWeight: parseFloat(data.initialWeight),
+        targetWeight: parseFloat(data.targetWeight),
+        dietLevel: parseInt(data.dietLevel),
+        medicalNotes: data.medicalNotes || null,
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: "✅ Paciente Creado Exitosamente",
+        description: `${data.patient.name} ha sido registrado con código de acceso: ${data.accessCode}`,
+        variant: "default",
+        duration: 10000,
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/professional/patients"] });
+      setShowCreatePatient(false);
+      createPatientForm.reset();
+      
+      // Show access code in a prominent way
+      setTimeout(() => {
+        toast({
+          title: "📋 Código de Acceso Generado",
+          description: `NUEVO CÓDIGO: ${data.accessCode} - Válido por 30 días`,
+          variant: "default",
+          duration: 15000,
+        });
+      }, 1000);
+    },
+    onError: (error: any) => {
+      console.error("Patient creation error:", error);
+      toast({
+        title: "❌ Error al Crear Paciente",
+        description: error.message || "Error al crear el paciente",
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Form for creating patient
+  const createPatientForm = useForm({
+    resolver: zodResolver(createPatientSchema),
+    defaultValues: {
+      name: "",
+      age: "",
+      height: "",
+      initialWeight: "",
+      targetWeight: "",
+      dietLevel: "",
+      medicalNotes: "",
+    },
+  });
+
+  const onSubmitCreatePatient = (data: any) => {
+    createPatientMutation.mutate(data);
+  };
+
   // Format weight data for chart
   const formatWeightDataForChart = (data: any[]) => {
     if (!data || !Array.isArray(data) || data.length === 0) return [];
@@ -558,20 +649,51 @@ export default function ProfessionalDashboardWorking() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 text-center">
-                  <UserPlus className="w-16 h-16 text-blue-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                    Funcionalidad de Creación
-                  </h3>
-                  <p className="text-gray-600 mb-4">
-                    Aquí podrás crear nuevos pacientes con códigos de acceso automáticos,
-                    asignar niveles de dieta y configurar objetivos de peso.
-                  </p>
-                  <div className="text-sm text-blue-700">
-                    <p>• Generación automática de códigos de acceso</p>
-                    <p>• Asignación de niveles de dieta (1-5)</p>
-                    <p>• Configuración de peso objetivo</p>
-                    <p>• Validación de datos médicos</p>
+                <div className="space-y-6">
+                  <div className="text-center">
+                    <Button
+                      onClick={() => setShowCreatePatient(true)}
+                      className="bg-green-600 text-white hover:bg-green-700 text-lg px-8 py-3"
+                    >
+                      <UserPlus className="mr-2" size={20} />
+                      Crear Nuevo Paciente
+                    </Button>
+                  </div>
+                  
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                    <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+                      Sistema de Gestión de Pacientes
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-blue-700">
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Generación automática de códigos de acceso</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Asignación de niveles de dieta (1-5)</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Configuración de peso objetivo</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Validación de datos médicos</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Códigos válidos por 30 días</span>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span>Seguimiento automático de progreso</span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -1209,6 +1331,211 @@ export default function ProfessionalDashboardWorking() {
                 </Button>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Create Patient Modal */}
+        <Dialog open={showCreatePatient} onOpenChange={setShowCreatePatient}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <UserPlus className="text-green-600" size={24} />
+                <span>Crear Nuevo Paciente</span>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <Form {...createPatientForm}>
+              <form onSubmit={createPatientForm.handleSubmit(onSubmitCreatePatient)} className="space-y-6">
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 text-green-800 mb-2">
+                    <UserPlus className="text-green-600" size={20} />
+                    <h4 className="font-medium">Registro de Nuevo Paciente</h4>
+                  </div>
+                  <p className="text-sm text-green-700">
+                    Complete todos los campos para generar automáticamente un código de acceso válido por 30 días.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    control={createPatientForm.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nombre Completo *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Ej: María García López"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={createPatientForm.control}
+                    name="age"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Edad *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            placeholder="Ej: 35"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    control={createPatientForm.control}
+                    name="height"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estatura (cm) *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            step="0.1"
+                            placeholder="Ej: 165.5"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={createPatientForm.control}
+                    name="initialWeight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Peso Inicial (kg) *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            step="0.1"
+                            placeholder="Ej: 75.5"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={createPatientForm.control}
+                    name="targetWeight"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Peso Objetivo (kg) *</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number"
+                            step="0.1"
+                            placeholder="Ej: 65.0"
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
+                <FormField
+                  control={createPatientForm.control}
+                  name="dietLevel"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nivel de Dieta *</FormLabel>
+                      <FormControl>
+                        <select 
+                          {...field} 
+                          className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                        >
+                          <option value="">Seleccionar nivel de dieta...</option>
+                          {dietLevels?.map((level: any) => (
+                            <option key={level.id} value={level.level.toString()}>
+                              Nivel {level.level} - {level.name}
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={createPatientForm.control}
+                  name="medicalNotes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notas Médicas (opcional)</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Observaciones médicas, alergias, condiciones especiales..."
+                          rows={3}
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <div className="flex items-center space-x-2 text-blue-800 mb-2">
+                    <RefreshCw className="text-blue-600" size={16} />
+                    <span className="font-medium">Generación Automática de Código</span>
+                  </div>
+                  <ul className="text-sm text-blue-700 space-y-1">
+                    <li>• Se generará automáticamente un código de acceso único</li>
+                    <li>• El código será válido por 30 días desde la fecha de creación</li>
+                    <li>• El paciente podrá usar este código para acceder a su plan nutricional</li>
+                    <li>• Podrás renovar o modificar el código en cualquier momento</li>
+                  </ul>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowCreatePatient(false)}
+                    disabled={createPatientMutation.isPending}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={createPatientMutation.isPending}
+                    className="bg-green-600 text-white hover:bg-green-700"
+                  >
+                    {createPatientMutation.isPending ? (
+                      <>
+                        <RefreshCw className="animate-spin mr-2" size={16} />
+                        Creando Paciente...
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="mr-2" size={16} />
+                        Crear Paciente
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>
