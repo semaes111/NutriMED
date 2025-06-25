@@ -138,10 +138,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Diet levels request - Session ID:", req.sessionID);
       console.log("Session exists:", !!req.session);
-      console.log("Professional data exists:", !!req.session?.professionalData);
+      console.log("Session data:", req.session);
+      console.log("Professional data exists:", !!(req.session as any)?.professionalData);
       
       // Check for professional session or Replit auth
-      const hasSessionAuth = req.session?.professionalData;
+      const hasSessionAuth = (req.session as any)?.professionalData;
       const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
       
       console.log("Diet levels - Session auth:", hasSessionAuth);
@@ -367,13 +368,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Código profesional no válido" });
       }
       
-      // Initialize session if it doesn't exist
-      if (!req.session) {
-        req.session = {};
-      }
-      
-      // Create professional session data
-      req.session.professionalData = {
+      // Create professional session data directly
+      const professionalSession = {
         id: professional.id,
         name: professional.name,
         specialty: professional.specialty,
@@ -383,9 +379,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         loginTime: new Date().toISOString()
       };
       
-      console.log("Professional session data set:", req.session.professionalData);
+      // Store in session
+      (req.session as any).professionalData = professionalSession;
       
-      // Force session save with callback
+      console.log("Professional session data set:", professionalSession);
+      console.log("Session ID:", req.sessionID);
+      
+      // Force session save
       req.session.save((err: any) => {
         if (err) {
           console.error('Session save error:', err);
@@ -393,6 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         console.log('Professional session saved successfully');
+        console.log('Session ID after save:', req.sessionID);
         
         res.json({
           valid: true,
@@ -461,12 +462,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Patient creation request received");
       console.log("Session exists:", !!req.session);
-      console.log("Professional data in session:", !!req.session?.professionalData);
-      console.log("Session professional data:", req.session?.professionalData);
+      console.log("Professional data in session:", !!(req.session as any)?.professionalData);
+      console.log("Session professional data:", (req.session as any)?.professionalData);
       console.log("Request body:", req.body);
       
       // Check for professional session first
-      const hasSessionAuth = req.session?.professionalData;
+      const hasSessionAuth = (req.session as any)?.professionalData;
       const hasReplitAuth = req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub;
       
       console.log("Session auth:", hasSessionAuth);
@@ -517,11 +518,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Professional patients request - Session ID:", req.sessionID);
       console.log("Session exists:", !!req.session);
-      console.log("Professional data exists:", !!req.session?.professionalData);
-      console.log("Professional data:", req.session?.professionalData);
+      console.log("Session data:", req.session);
+      console.log("Professional data exists:", !!(req.session as any)?.professionalData);
+      console.log("Professional data:", (req.session as any)?.professionalData);
       
       // Check for professional session first
-      if (req.session?.professionalData) {
+      if ((req.session as any)?.professionalData) {
         console.log("Professional patients request via session - authenticated");
         const patients = await storage.getAllPatients();
         return res.json(patients);
