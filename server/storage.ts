@@ -5,6 +5,7 @@ import {
   recipes, 
   foodItems,
   intermittentFasting,
+  moodEntries,
   users,
   professionals,
   weightRecords,
@@ -16,6 +17,8 @@ import {
   type FoodItem,
   type IntermittentFasting,
   type InsertIntermittentFasting,
+  type MoodEntry,
+  type InsertMoodEntry,
   type User,
   type UpsertUser
 } from "@shared/schema";
@@ -57,6 +60,11 @@ export interface IStorage {
   // Intermittent fasting
   getIntermittentFastingByPatient(patientId: number): Promise<IntermittentFasting | undefined>;
   createIntermittentFasting(fasting: InsertIntermittentFasting): Promise<IntermittentFasting>;
+  
+  // Mood tracking
+  getMoodEntriesByPatient(patientId: number): Promise<MoodEntry[]>;
+  createMoodEntry(moodEntry: InsertMoodEntry): Promise<MoodEntry>;
+  getRecentMoodEntry(patientId: number): Promise<MoodEntry | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -296,6 +304,34 @@ export class DatabaseStorage implements IStorage {
       .values([insertFasting])
       .returning();
     return fasting;
+  }
+
+  // Mood tracking methods
+  async getMoodEntriesByPatient(patientId: number): Promise<MoodEntry[]> {
+    const entries = await db
+      .select()
+      .from(moodEntries)
+      .where(eq(moodEntries.patientId, patientId))
+      .orderBy(desc(moodEntries.recordedDate));
+    return entries;
+  }
+
+  async createMoodEntry(insertMoodEntry: InsertMoodEntry): Promise<MoodEntry> {
+    const [entry] = await db
+      .insert(moodEntries)
+      .values(insertMoodEntry)
+      .returning();
+    return entry;
+  }
+
+  async getRecentMoodEntry(patientId: number): Promise<MoodEntry | undefined> {
+    const [entry] = await db
+      .select()
+      .from(moodEntries)
+      .where(eq(moodEntries.patientId, patientId))
+      .orderBy(desc(moodEntries.recordedDate))
+      .limit(1);
+    return entry;
   }
 }
 

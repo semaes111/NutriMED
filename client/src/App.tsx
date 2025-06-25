@@ -10,6 +10,7 @@ import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import MealPlan from "@/pages/meal-plan";
 import IntermittentFasting from "@/pages/intermittent-fasting";
+import MoodTrackerPage from "@/pages/mood-tracker";
 import Landing from "@/pages/landing";
 import ProfessionalDashboard from "@/pages/professional-dashboard";
 import ProfessionalAccess from "@/pages/professional-access";
@@ -50,6 +51,9 @@ function Router() {
       
       {/* Intermittent fasting route - available for both authenticated users and temporary sessions */}
       <Route path="/intermittent-fasting" component={IntermittentFasting} />
+      
+      {/* Mood tracker route - available for both authenticated users and temporary sessions */}
+      <Route path="/mood-tracker" component={MoodTrackerPage} />
       
       {/* Fallback routes */}
       <Route path="/landing" component={Landing} />

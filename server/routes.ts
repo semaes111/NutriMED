@@ -22,6 +22,17 @@ function generateAccessCode(): string {
   return result;
 }
 
+// Patient authentication middleware
+const isPatientAuthenticated = (req: any, res: any, next: any) => {
+  // Check for active patient session
+  if (req.patientSession?.patient?.id) {
+    return next();
+  }
+  
+  // If no session, return unauthorized
+  return res.status(401).json({ message: "Unauthorized" });
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
@@ -622,6 +633,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
     } catch (error) {
       console.error("Error fetching patient weight history:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // Get mood entries for authenticated patient
+  app.get("/api/patient/mood-entries", isPatientAuthenticated, async (req: any, res) => {
+    try {
+      const patientId = req.patientSession?.patient.id;
+      console.log("Fetching mood entries for patient ID:", patientId);
+      
+      const entries = await storage.getMoodEntriesByPatient(patientId);
+      res.json(entries);
+    } catch (error) {
+      console.error("Error fetching mood entries:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // Create mood entry for authenticated patient
+  app.post("/api/patient/mood-entries", isPatientAuthenticated, async (req: any, res) => {
+    try {
+      const patientId = req.patientSession?.patient.id;
+      const { moodLevel, energyLevel, motivationLevel, notes, tags } = req.body;
+
+      // Validation
+      if (!moodLevel || !energyLevel || !motivationLevel) {
+        return res.status(400).json({ 
+          message: "Se requieren los niveles de ánimo, energía y motivación" 
+        });
+      }
+
+      if (moodLevel < 1 || moodLevel > 5 || energyLevel < 1 || energyLevel > 5 || motivationLevel < 1 || motivationLevel > 5) {
+        return res.status(400).json({ 
+          message: "Los niveles deben estar entre 1 y 5" 
+        });
+      }
+
+      const moodEntry = await storage.createMoodEntry({
+        patientId,
+        moodLevel: parseInt(moodLevel),
+        energyLevel: parseInt(energyLevel), 
+        motivationLevel: parseInt(motivationLevel),
+        notes: notes || null,
+        tags: tags || [],
+        recordedDate: new Date(),
+      });
+
+      console.log("Mood entry created:", moodEntry);
+      res.json(moodEntry);
+    } catch (error) {
+      console.error("Error creating mood entry:", error);
+      res.status(500).json({ message: "Error interno del servidor" });
+    }
+  });
+
+  // Get recent mood entry for authenticated patient
+  app.get("/api/patient/mood-entries/recent", isPatientAuthenticated, async (req: any, res) => {
+    try {
+      const patientId = req.patientSession?.patient.id;
+      
+      const recentEntry = await storage.getRecentMoodEntry(patientId);
+      
+      if (!recentEntry) {
+        return res.status(404).json({ message: "No se encontraron registros de estado de ánimo" });
+      }
+
+      res.json(recentEntry);
+    } catch (error) {
+      console.error("Error fetching recent mood entry:", error);
       res.status(500).json({ message: "Error interno del servidor" });
     }
   });

@@ -138,6 +138,19 @@ export const intermittentFasting = pgTable("intermittent_fasting", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Mood tracking table for wellness monitoring
+export const moodEntries = pgTable("mood_entries", {
+  id: serial("id").primaryKey(),
+  patientId: integer("patient_id").references(() => patients.id).notNull(),
+  moodLevel: integer("mood_level").notNull(), // 1-5 scale (1=very bad, 5=excellent)
+  energyLevel: integer("energy_level").notNull(), // 1-5 scale
+  motivationLevel: integer("motivation_level").notNull(), // 1-5 scale
+  notes: text("notes"),
+  tags: json("tags").$type<string[]>().default([]), // e.g., ["stressed", "tired", "excited"]
+  recordedDate: timestamp("recorded_date").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Relations
 export const patientsRelations = relations(patients, ({ one, many }) => ({
   user: one(users, {
@@ -150,6 +163,7 @@ export const patientsRelations = relations(patients, ({ one, many }) => ({
   }),
   fastingPrograms: many(intermittentFasting),
   weightRecords: many(weightRecords),
+  moodEntries: many(moodEntries),
 }));
 
 export const weightRecordsRelations = relations(weightRecords, ({ one }) => ({
@@ -196,6 +210,13 @@ export const intermittentFastingRelations = relations(intermittentFasting, ({ on
   }),
 }));
 
+export const moodEntriesRelations = relations(moodEntries, ({ one }) => ({
+  patient: one(patients, {
+    fields: [moodEntries.patientId],
+    references: [patients.id],
+  }),
+}));
+
 // Insert schemas
 export const insertPatientSchema = createInsertSchema(patients).omit({
   id: true,
@@ -234,6 +255,11 @@ export const insertIntermittentFastingSchema = createInsertSchema(intermittentFa
   createdAt: true,
 });
 
+export const insertMoodEntrySchema = createInsertSchema(moodEntries).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -253,3 +279,5 @@ export type FoodItem = typeof foodItems.$inferSelect;
 export type InsertFoodItem = z.infer<typeof insertFoodItemSchema>;
 export type IntermittentFasting = typeof intermittentFasting.$inferSelect;
 export type InsertIntermittentFasting = z.infer<typeof insertIntermittentFastingSchema>;
+export type MoodEntry = typeof moodEntries.$inferSelect;
+export type InsertMoodEntry = z.infer<typeof insertMoodEntrySchema>;

@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Calendar,
   Wheat,
+  Heart,
   Apple,
   Drumstick,
   Leaf,
