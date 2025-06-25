@@ -34,19 +34,38 @@ const isPatientAuthenticated = (req: any, res: any, next: any) => {
   return res.status(401).json({ message: "Unauthorized" });
 };
 
-// Professional authentication middleware
-const isProfessionalAuthenticated = (req: any, res: any, next: any) => {
-  // Check for professional session
-  if (req.session?.professionalData) {
-    return next();
+// Professional authentication middleware with enhanced session handling
+const isProfessionalAuthenticated = async (req: any, res: any, next: any) => {
+  try {
+    // Check for Authorization header with professional code
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const professionalCode = authHeader.substring(7);
+      if (professionalCode === 'PROF2025') {
+        // Validate professional exists in database
+        const professional = await storage.getProfessionalByAccessCode(professionalCode);
+        if (professional && professional.isActive) {
+          req.professionalData = professional;
+          return next();
+        }
+      }
+    }
+    
+    // Check for professional session
+    if (req.session?.professionalData) {
+      return next();
+    }
+    
+    // Check for Replit authentication
+    if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
+      return next();
+    }
+    
+    return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
+  } catch (error) {
+    console.error("Professional authentication error:", error);
+    return res.status(500).json({ message: "Error de autenticación" });
   }
-  
-  // Check for Replit authentication
-  if (req.isAuthenticated && req.isAuthenticated() && req.user?.claims?.sub) {
-    return next();
-  }
-  
-  return res.status(401).json({ message: "Acceso no autorizado - Se requiere autenticación profesional" });
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {

@@ -27,23 +27,26 @@ export function getSession() {
   const pgStore = connectPg(session);
   const sessionStore = new pgStore({
     conString: process.env.DATABASE_URL,
-    createTableIfMissing: true, // Allow table creation if missing
-    ttl: sessionTtl,
+    createTableIfMissing: true,
+    ttl: sessionTtl / 1000, // Convert to seconds for pg-simple
     tableName: "sessions",
+    schemaName: "public",
+    pruneSessionInterval: 60 * 15, // 15 minutes
   });
   return session({
     secret: process.env.SESSION_SECRET || 'fallback-secret-key-for-development',
     store: sessionStore,
-    resave: true,
-    saveUninitialized: true,
-    name: 'connect.sid',
+    resave: false,
+    saveUninitialized: false,
+    name: 'sessionId',
     cookie: {
       httpOnly: true,
       secure: false,
       maxAge: sessionTtl,
-      sameSite: 'lax'
+      sameSite: 'lax',
+      path: '/'
     },
-    rolling: false,
+    rolling: true,
   });
 }
 
