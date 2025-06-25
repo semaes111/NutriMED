@@ -246,8 +246,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Professional routes
 
-  // Validate professional access code - no auth required for initial validation
-  app.post("/api/professional/validate", async (req, res) => {
+  // Validate professional access code - creates session for authenticated access
+  app.post("/api/professional/validate", async (req: any, res) => {
     try {
       console.log("Professional validation request body:", req.body);
       const { accessCode } = req.body;
@@ -266,16 +266,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Código profesional no válido" });
       }
       
-      res.json({
-        valid: true,
-        professional: {
-          id: professional.id,
-          name: professional.name,
-          specialty: professional.specialty,
-          licenseNumber: professional.licenseNumber,
-          accessCode: professional.accessCode
+      // Initialize session if it doesn't exist
+      if (!req.session) {
+        req.session = {};
+      }
+      
+      // Create professional session data
+      req.session.professionalData = {
+        id: professional.id,
+        name: professional.name,
+        specialty: professional.specialty,
+        licenseNumber: professional.licenseNumber,
+        email: professional.email,
+        accessCode: professional.accessCode,
+        loginTime: new Date().toISOString()
+      };
+      
+      console.log("Professional session data set:", req.session.professionalData);
+      
+      // Force session save with callback
+      req.session.save((err: any) => {
+        if (err) {
+          console.error('Session save error:', err);
+          return res.status(500).json({ message: "Error al crear sesión profesional" });
         }
+        
+        console.log('Professional session saved successfully');
+        
+        res.json({
+          valid: true,
+          professional: {
+            id: professional.id,
+            name: professional.name,
+            specialty: professional.specialty,
+            licenseNumber: professional.licenseNumber,
+            accessCode: professional.accessCode
+          }
+        });
       });
+      
     } catch (error) {
       console.error("Error in professional validation:", error);
       res.status(500).json({ 

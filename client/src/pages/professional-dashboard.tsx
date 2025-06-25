@@ -63,14 +63,29 @@ export default function ProfessionalDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   
   // Check if professional is validated (from localStorage)
-  const professionalInfo = localStorage.getItem('professionalInfo');
+  const [professionalInfo, setProfessionalInfo] = useState<any>(null);
+  
+  useEffect(() => {
+    const storedInfo = localStorage.getItem('professionalInfo');
+    if (storedInfo) {
+      try {
+        const parsed = JSON.parse(storedInfo);
+        setProfessionalInfo(parsed);
+        console.log('Professional info loaded from localStorage:', parsed);
+      } catch (error) {
+        console.error('Error parsing professional info:', error);
+        localStorage.removeItem('professionalInfo');
+      }
+    }
+  }, []);
+  
   const isValidated = !!professionalInfo;
 
-  // Get professional profile
+  // Get professional profile - only if no localStorage data
   const { data: professional, isLoading: isProfessionalLoading } = useQuery({
     queryKey: ["/api/professional/profile"],
     retry: false,
-    enabled: isValidated,
+    enabled: isValidated && !professionalInfo,
   });
 
   // Get all patients
@@ -360,7 +375,7 @@ export default function ProfessionalDashboard() {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">Panel Profesional</h1>
-                <p className="text-medical-gray">{professional.professional?.name}</p>
+                <p className="text-medical-gray">{currentProfessional?.name}</p>
               </div>
             </div>
             <Button
