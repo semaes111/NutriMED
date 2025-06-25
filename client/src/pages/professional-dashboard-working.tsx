@@ -282,6 +282,10 @@ export default function ProfessionalDashboardWorking() {
     targetWeightMutation.mutate(data);
   };
 
+  const onRevokeCode = () => {
+    revokeCodeMutation.mutate();
+  };
+
   // Format weight data for chart
   const formatWeightDataForChart = (data: any[]) => {
     if (!data || !Array.isArray(data) || data.length === 0) return [];
@@ -448,9 +452,23 @@ export default function ProfessionalDashboardWorking() {
                         
                         <div className="flex items-center space-x-4">
                           <div className="text-right">
-                            <Badge variant="outline" className="text-xs">
-                              Código: {patient.accessCode}
-                            </Badge>
+                            <div className="flex items-center space-x-2">
+                              <Badge variant="outline" className="text-xs">
+                                Código: {patient.accessCode}
+                              </Badge>
+                              <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => {
+                                  setSelectedPatient(patient);
+                                  setShowRevokeCodeModal(true);
+                                }}
+                                className="text-xs px-2 py-1 h-6"
+                                title="Anular código de acceso"
+                              >
+                                <Ban size={12} />
+                              </Button>
+                            </div>
                             <p className="text-xs text-gray-500 mt-1">
                               Dieta Nivel {patient.dietLevel}
                             </p>
@@ -611,10 +629,24 @@ export default function ProfessionalDashboardWorking() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h4 className="font-medium text-blue-800 mb-1">Código de Acceso</h4>
-                    <p className="text-lg font-bold text-blue-700">{selectedPatient.accessCode}</p>
-                    <p className="text-xs text-blue-600 mt-1">
-                      Válido hasta: {new Date(selectedPatient.codeExpiry).toLocaleDateString('es-ES')}
-                    </p>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-lg font-bold text-blue-700">{selectedPatient.accessCode}</p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          Válido hasta: {new Date(selectedPatient.codeExpiry).toLocaleDateString('es-ES')}
+                        </p>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => setShowRevokeCodeModal(true)}
+                        className="flex items-center space-x-1"
+                        title="Anular código de acceso"
+                      >
+                        <Ban size={14} />
+                        <span>Anular</span>
+                      </Button>
+                    </div>
                   </div>
                   
                   <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -1066,6 +1098,78 @@ export default function ProfessionalDashboardWorking() {
                 </div>
               </form>
             </Form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Revoke Code Modal */}
+        <Dialog open={showRevokeCodeModal} onOpenChange={setShowRevokeCodeModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center space-x-2">
+                <Ban className="text-red-600" size={24} />
+                <span>Anular Código de Acceso</span>
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-center space-x-2 text-red-800 mb-2">
+                  <AlertTriangle className="text-red-600" size={20} />
+                  <h4 className="font-medium">¡Acción Irreversible!</h4>
+                </div>
+                <p className="text-sm text-red-700 mb-3">
+                  Esta acción anulará permanentemente el código de acceso de <strong>{selectedPatient?.name}</strong>.
+                </p>
+                <div className="bg-red-100 border border-red-300 rounded p-3 mb-3">
+                  <p className="text-xs font-medium text-red-800 mb-1">Código a anular:</p>
+                  <code className="text-sm font-bold text-red-900">{selectedPatient?.accessCode}</code>
+                </div>
+                <p className="text-xs text-red-600">
+                  ⚠️ El paciente perderá inmediatamente el acceso al sistema y no podrá iniciar sesión hasta que se le asigne un nuevo código.
+                </p>
+              </div>
+
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <div className="flex items-center space-x-2 text-yellow-800">
+                  <Ban className="text-yellow-600" size={16} />
+                  <span className="font-medium">Efectos de la Anulación</span>
+                </div>
+                <ul className="text-sm text-yellow-700 mt-2 space-y-1">
+                  <li>• El código actual será invalidado inmediatamente</li>
+                  <li>• El paciente no podrá acceder al dashboard</li>
+                  <li>• Los datos del paciente se conservarán intactos</li>
+                  <li>• Podrás generar un nuevo código registrando peso</li>
+                </ul>
+              </div>
+
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowRevokeCodeModal(false)}
+                  disabled={revokeCodeMutation.isPending}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  onClick={onRevokeCode}
+                  disabled={revokeCodeMutation.isPending}
+                  className="bg-red-600 text-white hover:bg-red-700"
+                >
+                  {revokeCodeMutation.isPending ? (
+                    <>
+                      <RefreshCw className="animate-spin mr-2" size={16} />
+                      Anulando...
+                    </>
+                  ) : (
+                    <>
+                      <Ban className="mr-2" size={16} />
+                      Anular Código
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
       </div>
