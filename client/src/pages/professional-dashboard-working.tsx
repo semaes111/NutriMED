@@ -1565,6 +1565,9 @@ export default function ProfessionalDashboardWorking() {
         {/* Patient Onboarding Wizard */}
         <Dialog open={showOnboardingWizard} onOpenChange={setShowOnboardingWizard}>
           <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto p-0">
+            <DialogHeader className="sr-only">
+              <DialogTitle>Asistente de Registro de Pacientes</DialogTitle>
+            </DialogHeader>
             <PatientOnboardingWizard
               onComplete={(patient, accessCode) => {
                 setShowOnboardingWizard(false);
