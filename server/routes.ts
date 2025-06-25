@@ -560,15 +560,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log("Weight registration request:", { patientId, weight, targetWeight, notes });
       
-      if (!weight || isNaN(parseFloat(weight)) || parseFloat(weight) < 30 || parseFloat(weight) > 300) {
+      if (!weight || isNaN(parseFloat(weight)) || parseFloat(weight) < 10 || parseFloat(weight) > 500) {
         console.log("Invalid weight:", weight);
-        return res.status(400).json({ message: "Peso inválido. Debe estar entre 30 y 300 kg." });
+        return res.status(400).json({ message: "Peso inválido. Debe estar entre 10 y 500 kg." });
       }
 
       // Validate target weight if provided
-      if (targetWeight && (isNaN(parseFloat(targetWeight)) || parseFloat(targetWeight) < 30 || parseFloat(targetWeight) > 300)) {
+      if (targetWeight && (isNaN(parseFloat(targetWeight)) || parseFloat(targetWeight) < 10 || parseFloat(targetWeight) > 500)) {
         console.log("Invalid target weight:", targetWeight);
-        return res.status(400).json({ message: "Peso objetivo inválido. Debe estar entre 30 y 300 kg." });
+        return res.status(400).json({ message: "Peso objetivo inválido. Debe estar entre 10 y 500 kg." });
       }
 
       // Create weight record with current date
@@ -618,8 +618,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const patientId = parseInt(req.params.id);
       const { targetWeight } = req.body;
       
-      if (!targetWeight || isNaN(parseFloat(targetWeight)) || parseFloat(targetWeight) < 30 || parseFloat(targetWeight) > 300) {
-        return res.status(400).json({ message: "Peso objetivo inválido (debe ser entre 30 y 300 kg)" });
+      if (!targetWeight || isNaN(parseFloat(targetWeight)) || parseFloat(targetWeight) < 10 || parseFloat(targetWeight) > 500) {
+        return res.status(400).json({ message: "Peso objetivo inválido (debe ser entre 10 y 500 kg)" });
       }
       
       await storage.updatePatientTargetWeight(patientId, parseFloat(targetWeight));

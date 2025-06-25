@@ -35,19 +35,19 @@ const createPatientSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
   age: z.coerce.number().min(1).max(120),
   height: z.coerce.number().min(100).max(250),
-  initialWeight: z.coerce.number().min(30).max(300),
-  targetWeight: z.coerce.number().min(30).max(300),
+  initialWeight: z.coerce.number().min(10).max(500),
+  targetWeight: z.coerce.number().min(10).max(500),
   dietLevel: z.coerce.number().min(1).max(5),
   medicalNotes: z.string().optional(),
 });
 
 const addWeightSchema = z.object({
-  weight: z.coerce.number().min(30).max(300),
+  weight: z.coerce.number().min(10).max(500),
   notes: z.string().optional(),
 });
 
 const targetWeightSchema = z.object({
-  targetWeight: z.coerce.number().min(30).max(300),
+  targetWeight: z.coerce.number().min(10).max(500),
 });
 
 type CreatePatientForm = z.infer<typeof createPatientSchema>;

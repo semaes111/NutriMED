@@ -42,7 +42,11 @@ import {
 } from "recharts";
 
 const addWeightSchema = z.object({
-  weight: z.string().min(1, "El peso es requerido"),
+  weight: z.string().min(1, "El peso es requerido")
+    .refine((val) => {
+      const num = parseFloat(val);
+      return !isNaN(num) && num >= 10 && num <= 500;
+    }, "Peso debe estar entre 10 y 500 kg"),
   notes: z.string().optional(),
 });
 
@@ -54,8 +58,8 @@ const targetWeightSchema = z.object({
   targetWeight: z.string().min(1, "Peso objetivo requerido")
     .refine((val) => {
       const num = parseFloat(val);
-      return !isNaN(num) && num >= 30 && num <= 300;
-    }, "Peso debe estar entre 30 y 300 kg")
+      return !isNaN(num) && num >= 10 && num <= 500;
+    }, "Peso debe estar entre 10 y 500 kg")
 });
 
 export default function ProfessionalDashboardWorking() {
