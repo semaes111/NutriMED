@@ -76,7 +76,8 @@ export default function ProfessionalDashboard() {
   // Get all patients
   const { data: patients, isLoading: isPatientsLoading } = useQuery({
     queryKey: ["/api/professional/patients"],
-    enabled: isValidated && !!professional,
+    enabled: isValidated,
+    retry: false,
   });
 
   // Filter patients based on search term
@@ -130,18 +131,10 @@ export default function ProfessionalDashboard() {
   const createPatientMutation = useMutation({
     mutationFn: async (data: CreatePatientForm) => {
       console.log("Creating patient with data:", data);
-      const response = await fetch("/api/professional/patients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+      return await apiRequest('/api/professional/patients', {
+        method: 'POST',
+        data
       });
-      
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Error al crear paciente");
-      }
-      
-      return response.json();
     },
     onSuccess: (data) => {
       toast({
