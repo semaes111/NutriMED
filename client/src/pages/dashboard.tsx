@@ -124,20 +124,7 @@ export default function Dashboard() {
 
   const { data: weightHistory } = useQuery({
     queryKey: ["/api/patient/weight-history", currentPatient?.id],
-    queryFn: async () => {
-      if (currentPatient?.id) {
-        console.log("Fetching weight history for patient:", currentPatient.id);
-        const response = await fetch(`/api/patient/weight-history/${currentPatient.id}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      }
-      return [];
-    },
-    enabled: !!currentPatient,
-    staleTime: 0, // Always fetch fresh data
-    refetchInterval: 5000, // Refetch every 5 seconds for real-time updates
+    enabled: !!currentPatient?.id,
   });
 
   const logoutMutation = useMutation({
