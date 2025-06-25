@@ -217,14 +217,13 @@ export function PatientOnboardingWizard({
         </p>
       </div>
 
-      <WizardProgress />
-
       <Wizard>
         {/* Step 1: Personal Information */}
         <WizardStep
           title="Información Personal"
           description="Datos básicos del paciente"
         >
+          <WizardProgress />
           <div className="flex items-center justify-center mb-6">
             <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
               <User className="text-blue-600" size={32} />
@@ -286,6 +285,7 @@ export function PatientOnboardingWizard({
           title="Datos Físicos"
           description="Estatura y peso actual del paciente"
         >
+          <WizardProgress />
           <div className="flex items-center justify-center mb-6">
             <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
               <Scale className="text-purple-600" size={32} />
@@ -350,6 +350,7 @@ export function PatientOnboardingWizard({
           title="Objetivos"
           description="Peso objetivo y nivel de dieta asignado"
         >
+          <WizardProgress />
           <div className="flex items-center justify-center mb-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
               <Target className="text-green-600" size={32} />
@@ -419,6 +420,7 @@ export function PatientOnboardingWizard({
           title="Notas Médicas"
           description="Información médica adicional (opcional)"
         >
+          <WizardProgress />
           <div className="flex items-center justify-center mb-6">
             <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
               <FileText className="text-orange-600" size={32} />
@@ -458,6 +460,7 @@ export function PatientOnboardingWizard({
             title="¡Paciente Creado Exitosamente!"
             description="El paciente ha sido registrado y su código de acceso ha sido generado"
           >
+            <WizardProgress />
             <div className="text-center space-y-6">
               <div className="flex items-center justify-center">
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
